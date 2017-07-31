@@ -129,7 +129,7 @@ func (t *ThirdPartyResources) Create(ctx context.Context, resource, namespace st
 	if err := checkResource(t.apiGroup, t.apiVersion, resource, namespace, "not required"); err != nil {
 		return err
 	}
-	url := t.c.urlFor(t.apiGroup, t.apiVersion, namespace, resource, "")
+	url := t.c.urlFor(t.apiGroup, t.apiVersion, ns, resource, "", "")
 	return t.c.create(ctx, jsonCodec, "POST", url, req, resp)
 }
 
@@ -137,7 +137,7 @@ func (t *ThirdPartyResources) Update(ctx context.Context, resource, namespace, n
 	if err := checkResource(t.apiGroup, t.apiVersion, resource, namespace, "not required"); err != nil {
 		return err
 	}
-	url := t.c.urlFor(t.apiGroup, t.apiVersion, namespace, resource, name)
+	url := t.c.urlFor(t.apiGroup, t.apiVersion, ns, resource, name, "")
 	return t.c.create(ctx, jsonCodec, "PUT", url, req, resp)
 }
 
@@ -145,7 +145,7 @@ func (t *ThirdPartyResources) Get(ctx context.Context, resource, namespace, name
 	if err := checkResource(t.apiGroup, t.apiVersion, resource, namespace, name); err != nil {
 		return err
 	}
-	url := t.c.urlFor(t.apiGroup, t.apiVersion, namespace, resource, name)
+	url := t.c.urlFor(t.apiGroup, t.apiVersion, ns, resource, name, "")
 	return t.c.get(ctx, jsonCodec, url, resp)
 }
 
@@ -153,7 +153,7 @@ func (t *ThirdPartyResources) Delete(ctx context.Context, resource, namespace, n
 	if err := checkResource(t.apiGroup, t.apiVersion, resource, namespace, name); err != nil {
 		return err
 	}
-	url := t.c.urlFor(t.apiGroup, t.apiVersion, namespace, resource, name)
+	url := t.c.urlFor(t.apiGroup, t.apiVersion, ns, resource, name, "")
 	return t.c.delete(ctx, jsonCodec, url)
 }
 
@@ -161,6 +161,6 @@ func (t *ThirdPartyResources) List(ctx context.Context, resource, namespace stri
 	if err := checkResource(t.apiGroup, t.apiVersion, resource, namespace, "name not required"); err != nil {
 		return err
 	}
-	url := t.c.urlFor(t.apiGroup, t.apiVersion, namespace, resource, "")
+	url := t.c.urlFor(t.apiGroup, t.apiVersion, ns, resource, "", "")
 	return t.c.get(ctx, jsonCodec, url, resp)
 }

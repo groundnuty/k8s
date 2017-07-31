@@ -70,6 +70,10 @@ func (c *CoreV1) CreateBinding(ctx context.Context, obj *apiv1.Binding) (*apiv1.
 }
 
 func (c *CoreV1) UpdateBinding(ctx context.Context, obj *apiv1.Binding) (*apiv1.Binding, error) {
+	return c.UpdateBindingSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdateBindingSubresource(ctx context.Context, obj *apiv1.Binding, subresource string) (*apiv1.Binding, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -89,7 +93,7 @@ func (c *CoreV1) UpdateBinding(ctx context.Context, obj *apiv1.Binding) (*apiv1.
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "bindings", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "bindings", *md.Name, subresource)
 	resp := new(apiv1.Binding)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -102,7 +106,9 @@ func (c *CoreV1) DeleteBinding(ctx context.Context, name string, namespace strin
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "bindings", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "bindings", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -110,7 +116,9 @@ func (c *CoreV1) GetBinding(ctx context.Context, name, namespace string) (*apiv1
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "bindings", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "bindings", name, "")
 	resp := new(apiv1.Binding)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -148,6 +156,10 @@ func (c *CoreV1) CreateComponentStatus(ctx context.Context, obj *apiv1.Component
 }
 
 func (c *CoreV1) UpdateComponentStatus(ctx context.Context, obj *apiv1.ComponentStatus) (*apiv1.ComponentStatus, error) {
+	return c.UpdateComponentStatusSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdateComponentStatusSubresource(ctx context.Context, obj *apiv1.ComponentStatus, subresource string) (*apiv1.ComponentStatus, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -167,7 +179,7 @@ func (c *CoreV1) UpdateComponentStatus(ctx context.Context, obj *apiv1.Component
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "componentstatuses", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "componentstatuses", *md.Name, subresource)
 	resp := new(apiv1.ComponentStatus)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -180,7 +192,9 @@ func (c *CoreV1) DeleteComponentStatus(ctx context.Context, name string) error {
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", AllNamespaces, "componentstatuses", name)
+	ns := ""
+	
+	url := c.client.urlFor("", "v1", ns, "componentstatuses", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -188,7 +202,9 @@ func (c *CoreV1) GetComponentStatus(ctx context.Context, name string) (*apiv1.Co
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", AllNamespaces, "componentstatuses", name)
+	ns := ""
+	
+	url := c.client.urlFor("", "v1", ns, "componentstatuses", name, "")
 	resp := new(apiv1.ComponentStatus)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -216,8 +232,9 @@ func (w *CoreV1ComponentStatusWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CoreV1) WatchComponentStatuses(ctx context.Context, options ...Option) (*CoreV1ComponentStatusWatcher, error) {
-	url := c.client.urlFor("", "v1", AllNamespaces, "componentstatuses", "", options...)
+func (c *CoreV1) WatchComponentStatuses(ctx context.Context, options ...Option) (*CoreV1ComponentStatusWatcher, error){
+	ns := ""
+	url := c.client.urlFor("", "v1", ns, "componentstatuses", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -226,7 +243,8 @@ func (c *CoreV1) WatchComponentStatuses(ctx context.Context, options ...Option) 
 }
 
 func (c *CoreV1) ListComponentStatuses(ctx context.Context, options ...Option) (*apiv1.ComponentStatusList, error) {
-	url := c.client.urlFor("", "v1", AllNamespaces, "componentstatuses", "", options...)
+	ns := ""
+	url := c.client.urlFor("", "v1", ns, "componentstatuses", "", "", options...)
 	resp := new(apiv1.ComponentStatusList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -264,6 +282,10 @@ func (c *CoreV1) CreateConfigMap(ctx context.Context, obj *apiv1.ConfigMap) (*ap
 }
 
 func (c *CoreV1) UpdateConfigMap(ctx context.Context, obj *apiv1.ConfigMap) (*apiv1.ConfigMap, error) {
+	return c.UpdateConfigMapSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdateConfigMapSubresource(ctx context.Context, obj *apiv1.ConfigMap, subresource string) (*apiv1.ConfigMap, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -283,7 +305,7 @@ func (c *CoreV1) UpdateConfigMap(ctx context.Context, obj *apiv1.ConfigMap) (*ap
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "configmaps", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "configmaps", *md.Name, subresource)
 	resp := new(apiv1.ConfigMap)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -296,7 +318,9 @@ func (c *CoreV1) DeleteConfigMap(ctx context.Context, name string, namespace str
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "configmaps", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "configmaps", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -304,7 +328,9 @@ func (c *CoreV1) GetConfigMap(ctx context.Context, name, namespace string) (*api
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "configmaps", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "configmaps", name, "")
 	resp := new(apiv1.ConfigMap)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -332,8 +358,10 @@ func (w *CoreV1ConfigMapWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CoreV1) WatchConfigMaps(ctx context.Context, namespace string, options ...Option) (*CoreV1ConfigMapWatcher, error) {
-	url := c.client.urlFor("", "v1", namespace, "configmaps", "", options...)
+func (c *CoreV1) WatchConfigMaps(ctx context.Context, namespace string, options ...Option) (*CoreV1ConfigMapWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "configmaps", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -342,7 +370,9 @@ func (c *CoreV1) WatchConfigMaps(ctx context.Context, namespace string, options 
 }
 
 func (c *CoreV1) ListConfigMaps(ctx context.Context, namespace string, options ...Option) (*apiv1.ConfigMapList, error) {
-	url := c.client.urlFor("", "v1", namespace, "configmaps", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "configmaps", "", "", options...)
 	resp := new(apiv1.ConfigMapList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -380,6 +410,10 @@ func (c *CoreV1) CreateEndpoints(ctx context.Context, obj *apiv1.Endpoints) (*ap
 }
 
 func (c *CoreV1) UpdateEndpoints(ctx context.Context, obj *apiv1.Endpoints) (*apiv1.Endpoints, error) {
+	return c.UpdateEndpointsSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdateEndpointsSubresource(ctx context.Context, obj *apiv1.Endpoints, subresource string) (*apiv1.Endpoints, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -399,7 +433,7 @@ func (c *CoreV1) UpdateEndpoints(ctx context.Context, obj *apiv1.Endpoints) (*ap
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "endpoints", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "endpointses", *md.Name, subresource)
 	resp := new(apiv1.Endpoints)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -412,7 +446,9 @@ func (c *CoreV1) DeleteEndpoints(ctx context.Context, name string, namespace str
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "endpoints", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "endpointses", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -420,7 +456,9 @@ func (c *CoreV1) GetEndpoints(ctx context.Context, name, namespace string) (*api
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "endpoints", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "endpointses", name, "")
 	resp := new(apiv1.Endpoints)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -448,8 +486,10 @@ func (w *CoreV1EndpointsWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CoreV1) WatchEndpoints(ctx context.Context, namespace string, options ...Option) (*CoreV1EndpointsWatcher, error) {
-	url := c.client.urlFor("", "v1", namespace, "endpoints", "", options...)
+func (c *CoreV1) WatchEndpointses(ctx context.Context, namespace string, options ...Option) (*CoreV1EndpointsWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "endpointses", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -457,8 +497,10 @@ func (c *CoreV1) WatchEndpoints(ctx context.Context, namespace string, options .
 	return &CoreV1EndpointsWatcher{watcher}, nil
 }
 
-func (c *CoreV1) ListEndpoints(ctx context.Context, namespace string, options ...Option) (*apiv1.EndpointsList, error) {
-	url := c.client.urlFor("", "v1", namespace, "endpoints", "", options...)
+func (c *CoreV1) ListEndpointses(ctx context.Context, namespace string, options ...Option) (*apiv1.EndpointsList, error) {
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "endpointses", "", "", options...)
 	resp := new(apiv1.EndpointsList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -496,6 +538,10 @@ func (c *CoreV1) CreateEvent(ctx context.Context, obj *apiv1.Event) (*apiv1.Even
 }
 
 func (c *CoreV1) UpdateEvent(ctx context.Context, obj *apiv1.Event) (*apiv1.Event, error) {
+	return c.UpdateEventSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdateEventSubresource(ctx context.Context, obj *apiv1.Event, subresource string) (*apiv1.Event, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -515,7 +561,7 @@ func (c *CoreV1) UpdateEvent(ctx context.Context, obj *apiv1.Event) (*apiv1.Even
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "events", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "events", *md.Name, subresource)
 	resp := new(apiv1.Event)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -528,7 +574,9 @@ func (c *CoreV1) DeleteEvent(ctx context.Context, name string, namespace string)
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "events", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "events", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -536,7 +584,9 @@ func (c *CoreV1) GetEvent(ctx context.Context, name, namespace string) (*apiv1.E
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "events", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "events", name, "")
 	resp := new(apiv1.Event)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -564,8 +614,10 @@ func (w *CoreV1EventWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CoreV1) WatchEvents(ctx context.Context, namespace string, options ...Option) (*CoreV1EventWatcher, error) {
-	url := c.client.urlFor("", "v1", namespace, "events", "", options...)
+func (c *CoreV1) WatchEvents(ctx context.Context, namespace string, options ...Option) (*CoreV1EventWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "events", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -574,7 +626,9 @@ func (c *CoreV1) WatchEvents(ctx context.Context, namespace string, options ...O
 }
 
 func (c *CoreV1) ListEvents(ctx context.Context, namespace string, options ...Option) (*apiv1.EventList, error) {
-	url := c.client.urlFor("", "v1", namespace, "events", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "events", "", "", options...)
 	resp := new(apiv1.EventList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -612,6 +666,10 @@ func (c *CoreV1) CreateLimitRange(ctx context.Context, obj *apiv1.LimitRange) (*
 }
 
 func (c *CoreV1) UpdateLimitRange(ctx context.Context, obj *apiv1.LimitRange) (*apiv1.LimitRange, error) {
+	return c.UpdateLimitRangeSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdateLimitRangeSubresource(ctx context.Context, obj *apiv1.LimitRange, subresource string) (*apiv1.LimitRange, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -631,7 +689,7 @@ func (c *CoreV1) UpdateLimitRange(ctx context.Context, obj *apiv1.LimitRange) (*
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "limitranges", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "limitranges", *md.Name, subresource)
 	resp := new(apiv1.LimitRange)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -644,7 +702,9 @@ func (c *CoreV1) DeleteLimitRange(ctx context.Context, name string, namespace st
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "limitranges", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "limitranges", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -652,7 +712,9 @@ func (c *CoreV1) GetLimitRange(ctx context.Context, name, namespace string) (*ap
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "limitranges", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "limitranges", name, "")
 	resp := new(apiv1.LimitRange)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -680,8 +742,10 @@ func (w *CoreV1LimitRangeWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CoreV1) WatchLimitRanges(ctx context.Context, namespace string, options ...Option) (*CoreV1LimitRangeWatcher, error) {
-	url := c.client.urlFor("", "v1", namespace, "limitranges", "", options...)
+func (c *CoreV1) WatchLimitRanges(ctx context.Context, namespace string, options ...Option) (*CoreV1LimitRangeWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "limitranges", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -690,7 +754,9 @@ func (c *CoreV1) WatchLimitRanges(ctx context.Context, namespace string, options
 }
 
 func (c *CoreV1) ListLimitRanges(ctx context.Context, namespace string, options ...Option) (*apiv1.LimitRangeList, error) {
-	url := c.client.urlFor("", "v1", namespace, "limitranges", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "limitranges", "", "", options...)
 	resp := new(apiv1.LimitRangeList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -728,6 +794,10 @@ func (c *CoreV1) CreateNamespace(ctx context.Context, obj *apiv1.Namespace) (*ap
 }
 
 func (c *CoreV1) UpdateNamespace(ctx context.Context, obj *apiv1.Namespace) (*apiv1.Namespace, error) {
+	return c.UpdateNamespaceSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdateNamespaceSubresource(ctx context.Context, obj *apiv1.Namespace, subresource string) (*apiv1.Namespace, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -747,7 +817,7 @@ func (c *CoreV1) UpdateNamespace(ctx context.Context, obj *apiv1.Namespace) (*ap
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "namespaces", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "namespaces", *md.Name, subresource)
 	resp := new(apiv1.Namespace)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -760,7 +830,9 @@ func (c *CoreV1) DeleteNamespace(ctx context.Context, name string) error {
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", AllNamespaces, "namespaces", name)
+	ns := ""
+	
+	url := c.client.urlFor("", "v1", ns, "namespaces", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -768,7 +840,9 @@ func (c *CoreV1) GetNamespace(ctx context.Context, name string) (*apiv1.Namespac
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", AllNamespaces, "namespaces", name)
+	ns := ""
+	
+	url := c.client.urlFor("", "v1", ns, "namespaces", name, "")
 	resp := new(apiv1.Namespace)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -796,8 +870,9 @@ func (w *CoreV1NamespaceWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CoreV1) WatchNamespaces(ctx context.Context, options ...Option) (*CoreV1NamespaceWatcher, error) {
-	url := c.client.urlFor("", "v1", AllNamespaces, "namespaces", "", options...)
+func (c *CoreV1) WatchNamespaces(ctx context.Context, options ...Option) (*CoreV1NamespaceWatcher, error){
+	ns := ""
+	url := c.client.urlFor("", "v1", ns, "namespaces", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -806,7 +881,8 @@ func (c *CoreV1) WatchNamespaces(ctx context.Context, options ...Option) (*CoreV
 }
 
 func (c *CoreV1) ListNamespaces(ctx context.Context, options ...Option) (*apiv1.NamespaceList, error) {
-	url := c.client.urlFor("", "v1", AllNamespaces, "namespaces", "", options...)
+	ns := ""
+	url := c.client.urlFor("", "v1", ns, "namespaces", "", "", options...)
 	resp := new(apiv1.NamespaceList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -844,6 +920,10 @@ func (c *CoreV1) CreateNode(ctx context.Context, obj *apiv1.Node) (*apiv1.Node, 
 }
 
 func (c *CoreV1) UpdateNode(ctx context.Context, obj *apiv1.Node) (*apiv1.Node, error) {
+	return c.UpdateNodeSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdateNodeSubresource(ctx context.Context, obj *apiv1.Node, subresource string) (*apiv1.Node, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -863,7 +943,7 @@ func (c *CoreV1) UpdateNode(ctx context.Context, obj *apiv1.Node) (*apiv1.Node, 
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "nodes", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "nodes", *md.Name, subresource)
 	resp := new(apiv1.Node)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -876,7 +956,9 @@ func (c *CoreV1) DeleteNode(ctx context.Context, name string) error {
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", AllNamespaces, "nodes", name)
+	ns := ""
+	
+	url := c.client.urlFor("", "v1", ns, "nodes", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -884,7 +966,9 @@ func (c *CoreV1) GetNode(ctx context.Context, name string) (*apiv1.Node, error) 
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", AllNamespaces, "nodes", name)
+	ns := ""
+	
+	url := c.client.urlFor("", "v1", ns, "nodes", name, "")
 	resp := new(apiv1.Node)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -912,8 +996,9 @@ func (w *CoreV1NodeWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CoreV1) WatchNodes(ctx context.Context, options ...Option) (*CoreV1NodeWatcher, error) {
-	url := c.client.urlFor("", "v1", AllNamespaces, "nodes", "", options...)
+func (c *CoreV1) WatchNodes(ctx context.Context, options ...Option) (*CoreV1NodeWatcher, error){
+	ns := ""
+	url := c.client.urlFor("", "v1", ns, "nodes", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -922,7 +1007,8 @@ func (c *CoreV1) WatchNodes(ctx context.Context, options ...Option) (*CoreV1Node
 }
 
 func (c *CoreV1) ListNodes(ctx context.Context, options ...Option) (*apiv1.NodeList, error) {
-	url := c.client.urlFor("", "v1", AllNamespaces, "nodes", "", options...)
+	ns := ""
+	url := c.client.urlFor("", "v1", ns, "nodes", "", "", options...)
 	resp := new(apiv1.NodeList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -960,6 +1046,10 @@ func (c *CoreV1) CreatePersistentVolume(ctx context.Context, obj *apiv1.Persiste
 }
 
 func (c *CoreV1) UpdatePersistentVolume(ctx context.Context, obj *apiv1.PersistentVolume) (*apiv1.PersistentVolume, error) {
+	return c.UpdatePersistentVolumeSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdatePersistentVolumeSubresource(ctx context.Context, obj *apiv1.PersistentVolume, subresource string) (*apiv1.PersistentVolume, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -979,7 +1069,7 @@ func (c *CoreV1) UpdatePersistentVolume(ctx context.Context, obj *apiv1.Persiste
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "persistentvolumes", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "persistentvolumes", *md.Name, subresource)
 	resp := new(apiv1.PersistentVolume)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -992,7 +1082,9 @@ func (c *CoreV1) DeletePersistentVolume(ctx context.Context, name string) error 
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", AllNamespaces, "persistentvolumes", name)
+	ns := ""
+	
+	url := c.client.urlFor("", "v1", ns, "persistentvolumes", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -1000,7 +1092,9 @@ func (c *CoreV1) GetPersistentVolume(ctx context.Context, name string) (*apiv1.P
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", AllNamespaces, "persistentvolumes", name)
+	ns := ""
+	
+	url := c.client.urlFor("", "v1", ns, "persistentvolumes", name, "")
 	resp := new(apiv1.PersistentVolume)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -1028,8 +1122,9 @@ func (w *CoreV1PersistentVolumeWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CoreV1) WatchPersistentVolumes(ctx context.Context, options ...Option) (*CoreV1PersistentVolumeWatcher, error) {
-	url := c.client.urlFor("", "v1", AllNamespaces, "persistentvolumes", "", options...)
+func (c *CoreV1) WatchPersistentVolumes(ctx context.Context, options ...Option) (*CoreV1PersistentVolumeWatcher, error){
+	ns := ""
+	url := c.client.urlFor("", "v1", ns, "persistentvolumes", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -1038,7 +1133,8 @@ func (c *CoreV1) WatchPersistentVolumes(ctx context.Context, options ...Option) 
 }
 
 func (c *CoreV1) ListPersistentVolumes(ctx context.Context, options ...Option) (*apiv1.PersistentVolumeList, error) {
-	url := c.client.urlFor("", "v1", AllNamespaces, "persistentvolumes", "", options...)
+	ns := ""
+	url := c.client.urlFor("", "v1", ns, "persistentvolumes", "", "", options...)
 	resp := new(apiv1.PersistentVolumeList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -1076,6 +1172,10 @@ func (c *CoreV1) CreatePersistentVolumeClaim(ctx context.Context, obj *apiv1.Per
 }
 
 func (c *CoreV1) UpdatePersistentVolumeClaim(ctx context.Context, obj *apiv1.PersistentVolumeClaim) (*apiv1.PersistentVolumeClaim, error) {
+	return c.UpdatePersistentVolumeClaimSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdatePersistentVolumeClaimSubresource(ctx context.Context, obj *apiv1.PersistentVolumeClaim, subresource string) (*apiv1.PersistentVolumeClaim, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -1095,7 +1195,7 @@ func (c *CoreV1) UpdatePersistentVolumeClaim(ctx context.Context, obj *apiv1.Per
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "persistentvolumeclaims", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "persistentvolumeclaims", *md.Name, subresource)
 	resp := new(apiv1.PersistentVolumeClaim)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -1108,7 +1208,9 @@ func (c *CoreV1) DeletePersistentVolumeClaim(ctx context.Context, name string, n
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "persistentvolumeclaims", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "persistentvolumeclaims", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -1116,7 +1218,9 @@ func (c *CoreV1) GetPersistentVolumeClaim(ctx context.Context, name, namespace s
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "persistentvolumeclaims", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "persistentvolumeclaims", name, "")
 	resp := new(apiv1.PersistentVolumeClaim)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -1144,8 +1248,10 @@ func (w *CoreV1PersistentVolumeClaimWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CoreV1) WatchPersistentVolumeClaims(ctx context.Context, namespace string, options ...Option) (*CoreV1PersistentVolumeClaimWatcher, error) {
-	url := c.client.urlFor("", "v1", namespace, "persistentvolumeclaims", "", options...)
+func (c *CoreV1) WatchPersistentVolumeClaims(ctx context.Context, namespace string, options ...Option) (*CoreV1PersistentVolumeClaimWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "persistentvolumeclaims", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -1154,7 +1260,9 @@ func (c *CoreV1) WatchPersistentVolumeClaims(ctx context.Context, namespace stri
 }
 
 func (c *CoreV1) ListPersistentVolumeClaims(ctx context.Context, namespace string, options ...Option) (*apiv1.PersistentVolumeClaimList, error) {
-	url := c.client.urlFor("", "v1", namespace, "persistentvolumeclaims", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "persistentvolumeclaims", "", "", options...)
 	resp := new(apiv1.PersistentVolumeClaimList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -1192,6 +1300,10 @@ func (c *CoreV1) CreatePod(ctx context.Context, obj *apiv1.Pod) (*apiv1.Pod, err
 }
 
 func (c *CoreV1) UpdatePod(ctx context.Context, obj *apiv1.Pod) (*apiv1.Pod, error) {
+	return c.UpdatePodSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdatePodSubresource(ctx context.Context, obj *apiv1.Pod, subresource string) (*apiv1.Pod, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -1211,7 +1323,7 @@ func (c *CoreV1) UpdatePod(ctx context.Context, obj *apiv1.Pod) (*apiv1.Pod, err
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "pods", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "pods", *md.Name, subresource)
 	resp := new(apiv1.Pod)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -1224,7 +1336,9 @@ func (c *CoreV1) DeletePod(ctx context.Context, name string, namespace string) e
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "pods", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "pods", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -1232,7 +1346,9 @@ func (c *CoreV1) GetPod(ctx context.Context, name, namespace string) (*apiv1.Pod
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "pods", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "pods", name, "")
 	resp := new(apiv1.Pod)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -1260,8 +1376,10 @@ func (w *CoreV1PodWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CoreV1) WatchPods(ctx context.Context, namespace string, options ...Option) (*CoreV1PodWatcher, error) {
-	url := c.client.urlFor("", "v1", namespace, "pods", "", options...)
+func (c *CoreV1) WatchPods(ctx context.Context, namespace string, options ...Option) (*CoreV1PodWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "pods", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -1270,7 +1388,9 @@ func (c *CoreV1) WatchPods(ctx context.Context, namespace string, options ...Opt
 }
 
 func (c *CoreV1) ListPods(ctx context.Context, namespace string, options ...Option) (*apiv1.PodList, error) {
-	url := c.client.urlFor("", "v1", namespace, "pods", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "pods", "", "", options...)
 	resp := new(apiv1.PodList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -1308,6 +1428,10 @@ func (c *CoreV1) CreatePodStatusResult(ctx context.Context, obj *apiv1.PodStatus
 }
 
 func (c *CoreV1) UpdatePodStatusResult(ctx context.Context, obj *apiv1.PodStatusResult) (*apiv1.PodStatusResult, error) {
+	return c.UpdatePodStatusResultSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdatePodStatusResultSubresource(ctx context.Context, obj *apiv1.PodStatusResult, subresource string) (*apiv1.PodStatusResult, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -1327,7 +1451,7 @@ func (c *CoreV1) UpdatePodStatusResult(ctx context.Context, obj *apiv1.PodStatus
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "podstatusresults", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "podstatusresults", *md.Name, subresource)
 	resp := new(apiv1.PodStatusResult)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -1340,7 +1464,9 @@ func (c *CoreV1) DeletePodStatusResult(ctx context.Context, name string, namespa
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "podstatusresults", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "podstatusresults", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -1348,7 +1474,9 @@ func (c *CoreV1) GetPodStatusResult(ctx context.Context, name, namespace string)
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "podstatusresults", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "podstatusresults", name, "")
 	resp := new(apiv1.PodStatusResult)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -1386,6 +1514,10 @@ func (c *CoreV1) CreatePodTemplate(ctx context.Context, obj *apiv1.PodTemplate) 
 }
 
 func (c *CoreV1) UpdatePodTemplate(ctx context.Context, obj *apiv1.PodTemplate) (*apiv1.PodTemplate, error) {
+	return c.UpdatePodTemplateSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdatePodTemplateSubresource(ctx context.Context, obj *apiv1.PodTemplate, subresource string) (*apiv1.PodTemplate, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -1405,7 +1537,7 @@ func (c *CoreV1) UpdatePodTemplate(ctx context.Context, obj *apiv1.PodTemplate) 
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "podtemplates", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "podtemplates", *md.Name, subresource)
 	resp := new(apiv1.PodTemplate)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -1418,7 +1550,9 @@ func (c *CoreV1) DeletePodTemplate(ctx context.Context, name string, namespace s
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "podtemplates", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "podtemplates", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -1426,7 +1560,9 @@ func (c *CoreV1) GetPodTemplate(ctx context.Context, name, namespace string) (*a
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "podtemplates", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "podtemplates", name, "")
 	resp := new(apiv1.PodTemplate)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -1454,8 +1590,10 @@ func (w *CoreV1PodTemplateWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CoreV1) WatchPodTemplates(ctx context.Context, namespace string, options ...Option) (*CoreV1PodTemplateWatcher, error) {
-	url := c.client.urlFor("", "v1", namespace, "podtemplates", "", options...)
+func (c *CoreV1) WatchPodTemplates(ctx context.Context, namespace string, options ...Option) (*CoreV1PodTemplateWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "podtemplates", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -1464,7 +1602,9 @@ func (c *CoreV1) WatchPodTemplates(ctx context.Context, namespace string, option
 }
 
 func (c *CoreV1) ListPodTemplates(ctx context.Context, namespace string, options ...Option) (*apiv1.PodTemplateList, error) {
-	url := c.client.urlFor("", "v1", namespace, "podtemplates", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "podtemplates", "", "", options...)
 	resp := new(apiv1.PodTemplateList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -1502,6 +1642,10 @@ func (c *CoreV1) CreatePodTemplateSpec(ctx context.Context, obj *apiv1.PodTempla
 }
 
 func (c *CoreV1) UpdatePodTemplateSpec(ctx context.Context, obj *apiv1.PodTemplateSpec) (*apiv1.PodTemplateSpec, error) {
+	return c.UpdatePodTemplateSpecSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdatePodTemplateSpecSubresource(ctx context.Context, obj *apiv1.PodTemplateSpec, subresource string) (*apiv1.PodTemplateSpec, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -1521,7 +1665,7 @@ func (c *CoreV1) UpdatePodTemplateSpec(ctx context.Context, obj *apiv1.PodTempla
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "podtemplatespecs", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "podtemplatespecs", *md.Name, subresource)
 	resp := new(apiv1.PodTemplateSpec)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -1534,7 +1678,9 @@ func (c *CoreV1) DeletePodTemplateSpec(ctx context.Context, name string, namespa
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "podtemplatespecs", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "podtemplatespecs", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -1542,7 +1688,9 @@ func (c *CoreV1) GetPodTemplateSpec(ctx context.Context, name, namespace string)
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "podtemplatespecs", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "podtemplatespecs", name, "")
 	resp := new(apiv1.PodTemplateSpec)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -1580,6 +1728,10 @@ func (c *CoreV1) CreateRangeAllocation(ctx context.Context, obj *apiv1.RangeAllo
 }
 
 func (c *CoreV1) UpdateRangeAllocation(ctx context.Context, obj *apiv1.RangeAllocation) (*apiv1.RangeAllocation, error) {
+	return c.UpdateRangeAllocationSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdateRangeAllocationSubresource(ctx context.Context, obj *apiv1.RangeAllocation, subresource string) (*apiv1.RangeAllocation, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -1599,7 +1751,7 @@ func (c *CoreV1) UpdateRangeAllocation(ctx context.Context, obj *apiv1.RangeAllo
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "rangeallocations", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "rangeallocations", *md.Name, subresource)
 	resp := new(apiv1.RangeAllocation)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -1612,7 +1764,9 @@ func (c *CoreV1) DeleteRangeAllocation(ctx context.Context, name string, namespa
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "rangeallocations", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "rangeallocations", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -1620,7 +1774,9 @@ func (c *CoreV1) GetRangeAllocation(ctx context.Context, name, namespace string)
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "rangeallocations", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "rangeallocations", name, "")
 	resp := new(apiv1.RangeAllocation)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -1658,6 +1814,10 @@ func (c *CoreV1) CreateReplicationController(ctx context.Context, obj *apiv1.Rep
 }
 
 func (c *CoreV1) UpdateReplicationController(ctx context.Context, obj *apiv1.ReplicationController) (*apiv1.ReplicationController, error) {
+	return c.UpdateReplicationControllerSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdateReplicationControllerSubresource(ctx context.Context, obj *apiv1.ReplicationController, subresource string) (*apiv1.ReplicationController, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -1677,7 +1837,7 @@ func (c *CoreV1) UpdateReplicationController(ctx context.Context, obj *apiv1.Rep
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "replicationcontrollers", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "replicationcontrollers", *md.Name, subresource)
 	resp := new(apiv1.ReplicationController)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -1690,7 +1850,9 @@ func (c *CoreV1) DeleteReplicationController(ctx context.Context, name string, n
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "replicationcontrollers", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "replicationcontrollers", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -1698,7 +1860,9 @@ func (c *CoreV1) GetReplicationController(ctx context.Context, name, namespace s
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "replicationcontrollers", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "replicationcontrollers", name, "")
 	resp := new(apiv1.ReplicationController)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -1726,8 +1890,10 @@ func (w *CoreV1ReplicationControllerWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CoreV1) WatchReplicationControllers(ctx context.Context, namespace string, options ...Option) (*CoreV1ReplicationControllerWatcher, error) {
-	url := c.client.urlFor("", "v1", namespace, "replicationcontrollers", "", options...)
+func (c *CoreV1) WatchReplicationControllers(ctx context.Context, namespace string, options ...Option) (*CoreV1ReplicationControllerWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "replicationcontrollers", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -1736,7 +1902,9 @@ func (c *CoreV1) WatchReplicationControllers(ctx context.Context, namespace stri
 }
 
 func (c *CoreV1) ListReplicationControllers(ctx context.Context, namespace string, options ...Option) (*apiv1.ReplicationControllerList, error) {
-	url := c.client.urlFor("", "v1", namespace, "replicationcontrollers", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "replicationcontrollers", "", "", options...)
 	resp := new(apiv1.ReplicationControllerList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -1774,6 +1942,10 @@ func (c *CoreV1) CreateResourceQuota(ctx context.Context, obj *apiv1.ResourceQuo
 }
 
 func (c *CoreV1) UpdateResourceQuota(ctx context.Context, obj *apiv1.ResourceQuota) (*apiv1.ResourceQuota, error) {
+	return c.UpdateResourceQuotaSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdateResourceQuotaSubresource(ctx context.Context, obj *apiv1.ResourceQuota, subresource string) (*apiv1.ResourceQuota, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -1793,7 +1965,7 @@ func (c *CoreV1) UpdateResourceQuota(ctx context.Context, obj *apiv1.ResourceQuo
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "resourcequotas", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "resourcequotas", *md.Name, subresource)
 	resp := new(apiv1.ResourceQuota)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -1806,7 +1978,9 @@ func (c *CoreV1) DeleteResourceQuota(ctx context.Context, name string, namespace
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "resourcequotas", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "resourcequotas", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -1814,7 +1988,9 @@ func (c *CoreV1) GetResourceQuota(ctx context.Context, name, namespace string) (
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "resourcequotas", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "resourcequotas", name, "")
 	resp := new(apiv1.ResourceQuota)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -1842,8 +2018,10 @@ func (w *CoreV1ResourceQuotaWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CoreV1) WatchResourceQuotas(ctx context.Context, namespace string, options ...Option) (*CoreV1ResourceQuotaWatcher, error) {
-	url := c.client.urlFor("", "v1", namespace, "resourcequotas", "", options...)
+func (c *CoreV1) WatchResourceQuotas(ctx context.Context, namespace string, options ...Option) (*CoreV1ResourceQuotaWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "resourcequotas", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -1852,7 +2030,9 @@ func (c *CoreV1) WatchResourceQuotas(ctx context.Context, namespace string, opti
 }
 
 func (c *CoreV1) ListResourceQuotas(ctx context.Context, namespace string, options ...Option) (*apiv1.ResourceQuotaList, error) {
-	url := c.client.urlFor("", "v1", namespace, "resourcequotas", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "resourcequotas", "", "", options...)
 	resp := new(apiv1.ResourceQuotaList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -1890,6 +2070,10 @@ func (c *CoreV1) CreateSecret(ctx context.Context, obj *apiv1.Secret) (*apiv1.Se
 }
 
 func (c *CoreV1) UpdateSecret(ctx context.Context, obj *apiv1.Secret) (*apiv1.Secret, error) {
+	return c.UpdateSecretSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdateSecretSubresource(ctx context.Context, obj *apiv1.Secret, subresource string) (*apiv1.Secret, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -1909,7 +2093,7 @@ func (c *CoreV1) UpdateSecret(ctx context.Context, obj *apiv1.Secret) (*apiv1.Se
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "secrets", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "secrets", *md.Name, subresource)
 	resp := new(apiv1.Secret)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -1922,7 +2106,9 @@ func (c *CoreV1) DeleteSecret(ctx context.Context, name string, namespace string
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "secrets", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "secrets", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -1930,7 +2116,9 @@ func (c *CoreV1) GetSecret(ctx context.Context, name, namespace string) (*apiv1.
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "secrets", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "secrets", name, "")
 	resp := new(apiv1.Secret)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -1958,8 +2146,10 @@ func (w *CoreV1SecretWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CoreV1) WatchSecrets(ctx context.Context, namespace string, options ...Option) (*CoreV1SecretWatcher, error) {
-	url := c.client.urlFor("", "v1", namespace, "secrets", "", options...)
+func (c *CoreV1) WatchSecrets(ctx context.Context, namespace string, options ...Option) (*CoreV1SecretWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "secrets", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -1968,7 +2158,9 @@ func (c *CoreV1) WatchSecrets(ctx context.Context, namespace string, options ...
 }
 
 func (c *CoreV1) ListSecrets(ctx context.Context, namespace string, options ...Option) (*apiv1.SecretList, error) {
-	url := c.client.urlFor("", "v1", namespace, "secrets", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "secrets", "", "", options...)
 	resp := new(apiv1.SecretList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -2006,6 +2198,10 @@ func (c *CoreV1) CreateService(ctx context.Context, obj *apiv1.Service) (*apiv1.
 }
 
 func (c *CoreV1) UpdateService(ctx context.Context, obj *apiv1.Service) (*apiv1.Service, error) {
+	return c.UpdateServiceSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdateServiceSubresource(ctx context.Context, obj *apiv1.Service, subresource string) (*apiv1.Service, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -2025,7 +2221,7 @@ func (c *CoreV1) UpdateService(ctx context.Context, obj *apiv1.Service) (*apiv1.
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "services", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "services", *md.Name, subresource)
 	resp := new(apiv1.Service)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -2038,7 +2234,9 @@ func (c *CoreV1) DeleteService(ctx context.Context, name string, namespace strin
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "services", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "services", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -2046,7 +2244,9 @@ func (c *CoreV1) GetService(ctx context.Context, name, namespace string) (*apiv1
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "services", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "services", name, "")
 	resp := new(apiv1.Service)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -2074,8 +2274,10 @@ func (w *CoreV1ServiceWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CoreV1) WatchServices(ctx context.Context, namespace string, options ...Option) (*CoreV1ServiceWatcher, error) {
-	url := c.client.urlFor("", "v1", namespace, "services", "", options...)
+func (c *CoreV1) WatchServices(ctx context.Context, namespace string, options ...Option) (*CoreV1ServiceWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "services", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -2084,7 +2286,9 @@ func (c *CoreV1) WatchServices(ctx context.Context, namespace string, options ..
 }
 
 func (c *CoreV1) ListServices(ctx context.Context, namespace string, options ...Option) (*apiv1.ServiceList, error) {
-	url := c.client.urlFor("", "v1", namespace, "services", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "services", "", "", options...)
 	resp := new(apiv1.ServiceList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -2122,6 +2326,10 @@ func (c *CoreV1) CreateServiceAccount(ctx context.Context, obj *apiv1.ServiceAcc
 }
 
 func (c *CoreV1) UpdateServiceAccount(ctx context.Context, obj *apiv1.ServiceAccount) (*apiv1.ServiceAccount, error) {
+	return c.UpdateServiceAccountSubresource(ctx, obj, "")
+}
+
+func (c *CoreV1) UpdateServiceAccountSubresource(ctx context.Context, obj *apiv1.ServiceAccount, subresource string) (*apiv1.ServiceAccount, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -2141,7 +2349,7 @@ func (c *CoreV1) UpdateServiceAccount(ctx context.Context, obj *apiv1.ServiceAcc
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("", "v1", *md.Namespace, "serviceaccounts", *md.Name)
+	url := c.client.urlFor("", "v1", *md.Namespace, "serviceaccounts", *md.Name, subresource)
 	resp := new(apiv1.ServiceAccount)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -2154,7 +2362,9 @@ func (c *CoreV1) DeleteServiceAccount(ctx context.Context, name string, namespac
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "serviceaccounts", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "serviceaccounts", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -2162,7 +2372,9 @@ func (c *CoreV1) GetServiceAccount(ctx context.Context, name, namespace string) 
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("", "v1", namespace, "serviceaccounts", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "serviceaccounts", name, "")
 	resp := new(apiv1.ServiceAccount)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -2190,8 +2402,10 @@ func (w *CoreV1ServiceAccountWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CoreV1) WatchServiceAccounts(ctx context.Context, namespace string, options ...Option) (*CoreV1ServiceAccountWatcher, error) {
-	url := c.client.urlFor("", "v1", namespace, "serviceaccounts", "", options...)
+func (c *CoreV1) WatchServiceAccounts(ctx context.Context, namespace string, options ...Option) (*CoreV1ServiceAccountWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "serviceaccounts", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -2200,7 +2414,9 @@ func (c *CoreV1) WatchServiceAccounts(ctx context.Context, namespace string, opt
 }
 
 func (c *CoreV1) ListServiceAccounts(ctx context.Context, namespace string, options ...Option) (*apiv1.ServiceAccountList, error) {
-	url := c.client.urlFor("", "v1", namespace, "serviceaccounts", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("", "v1", ns, "serviceaccounts", "", "", options...)
 	resp := new(apiv1.ServiceAccountList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -2249,6 +2465,10 @@ func (c *AppsV1Alpha1) CreatePetSet(ctx context.Context, obj *appsv1alpha1.PetSe
 }
 
 func (c *AppsV1Alpha1) UpdatePetSet(ctx context.Context, obj *appsv1alpha1.PetSet) (*appsv1alpha1.PetSet, error) {
+	return c.UpdatePetSetSubresource(ctx, obj, "")
+}
+
+func (c *AppsV1Alpha1) UpdatePetSetSubresource(ctx context.Context, obj *appsv1alpha1.PetSet, subresource string) (*appsv1alpha1.PetSet, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -2268,7 +2488,7 @@ func (c *AppsV1Alpha1) UpdatePetSet(ctx context.Context, obj *appsv1alpha1.PetSe
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("apps", "v1alpha1", *md.Namespace, "petsets", *md.Name)
+	url := c.client.urlFor("apps", "v1alpha1", *md.Namespace, "petsets", *md.Name, subresource)
 	resp := new(appsv1alpha1.PetSet)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -2281,7 +2501,9 @@ func (c *AppsV1Alpha1) DeletePetSet(ctx context.Context, name string, namespace 
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("apps", "v1alpha1", namespace, "petsets", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("apps", "v1alpha1", ns, "petsets", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -2289,7 +2511,9 @@ func (c *AppsV1Alpha1) GetPetSet(ctx context.Context, name, namespace string) (*
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("apps", "v1alpha1", namespace, "petsets", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("apps", "v1alpha1", ns, "petsets", name, "")
 	resp := new(appsv1alpha1.PetSet)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -2317,8 +2541,10 @@ func (w *AppsV1Alpha1PetSetWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *AppsV1Alpha1) WatchPetSets(ctx context.Context, namespace string, options ...Option) (*AppsV1Alpha1PetSetWatcher, error) {
-	url := c.client.urlFor("apps", "v1alpha1", namespace, "petsets", "", options...)
+func (c *AppsV1Alpha1) WatchPetSets(ctx context.Context, namespace string, options ...Option) (*AppsV1Alpha1PetSetWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("apps", "v1alpha1", ns, "petsets", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -2327,7 +2553,9 @@ func (c *AppsV1Alpha1) WatchPetSets(ctx context.Context, namespace string, optio
 }
 
 func (c *AppsV1Alpha1) ListPetSets(ctx context.Context, namespace string, options ...Option) (*appsv1alpha1.PetSetList, error) {
-	url := c.client.urlFor("apps", "v1alpha1", namespace, "petsets", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("apps", "v1alpha1", ns, "petsets", "", "", options...)
 	resp := new(appsv1alpha1.PetSetList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -2570,6 +2798,10 @@ func (c *AppsV1Beta1) CreateStatefulSet(ctx context.Context, obj *appsv1beta1.St
 }
 
 func (c *AppsV1Beta1) UpdateStatefulSet(ctx context.Context, obj *appsv1beta1.StatefulSet) (*appsv1beta1.StatefulSet, error) {
+	return c.UpdateStatefulSetSubresource(ctx, obj, "")
+}
+
+func (c *AppsV1Beta1) UpdateStatefulSetSubresource(ctx context.Context, obj *appsv1beta1.StatefulSet, subresource string) (*appsv1beta1.StatefulSet, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -2589,7 +2821,7 @@ func (c *AppsV1Beta1) UpdateStatefulSet(ctx context.Context, obj *appsv1beta1.St
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("apps", "v1beta1", *md.Namespace, "statefulsets", *md.Name)
+	url := c.client.urlFor("apps", "v1beta1", *md.Namespace, "statefulsets", *md.Name, subresource)
 	resp := new(appsv1beta1.StatefulSet)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -2602,7 +2834,9 @@ func (c *AppsV1Beta1) DeleteStatefulSet(ctx context.Context, name string, namesp
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("apps", "v1beta1", namespace, "statefulsets", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("apps", "v1beta1", ns, "statefulsets", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -2610,7 +2844,9 @@ func (c *AppsV1Beta1) GetStatefulSet(ctx context.Context, name, namespace string
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("apps", "v1beta1", namespace, "statefulsets", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("apps", "v1beta1", ns, "statefulsets", name, "")
 	resp := new(appsv1beta1.StatefulSet)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -2638,8 +2874,10 @@ func (w *AppsV1Beta1StatefulSetWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *AppsV1Beta1) WatchStatefulSets(ctx context.Context, namespace string, options ...Option) (*AppsV1Beta1StatefulSetWatcher, error) {
-	url := c.client.urlFor("apps", "v1beta1", namespace, "statefulsets", "", options...)
+func (c *AppsV1Beta1) WatchStatefulSets(ctx context.Context, namespace string, options ...Option) (*AppsV1Beta1StatefulSetWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("apps", "v1beta1", ns, "statefulsets", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -2648,7 +2886,9 @@ func (c *AppsV1Beta1) WatchStatefulSets(ctx context.Context, namespace string, o
 }
 
 func (c *AppsV1Beta1) ListStatefulSets(ctx context.Context, namespace string, options ...Option) (*appsv1beta1.StatefulSetList, error) {
-	url := c.client.urlFor("apps", "v1beta1", namespace, "statefulsets", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("apps", "v1beta1", ns, "statefulsets", "", "", options...)
 	resp := new(appsv1beta1.StatefulSetList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -2786,6 +3026,10 @@ func (c *AuthenticationV1Beta1) CreateTokenReview(ctx context.Context, obj *auth
 }
 
 func (c *AuthenticationV1Beta1) UpdateTokenReview(ctx context.Context, obj *authenticationv1beta1.TokenReview) (*authenticationv1beta1.TokenReview, error) {
+	return c.UpdateTokenReviewSubresource(ctx, obj, "")
+}
+
+func (c *AuthenticationV1Beta1) UpdateTokenReviewSubresource(ctx context.Context, obj *authenticationv1beta1.TokenReview, subresource string) (*authenticationv1beta1.TokenReview, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -2805,7 +3049,7 @@ func (c *AuthenticationV1Beta1) UpdateTokenReview(ctx context.Context, obj *auth
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("authentication.k8s.io", "v1beta1", *md.Namespace, "tokenreviews", *md.Name)
+	url := c.client.urlFor("authentication.k8s.io", "v1beta1", *md.Namespace, "tokenreviews", *md.Name, subresource)
 	resp := new(authenticationv1beta1.TokenReview)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -2818,7 +3062,9 @@ func (c *AuthenticationV1Beta1) DeleteTokenReview(ctx context.Context, name stri
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("authentication.k8s.io", "v1beta1", AllNamespaces, "tokenreviews", name)
+	ns := ""
+	
+	url := c.client.urlFor("authentication.k8s.io", "v1beta1", ns, "tokenreviews", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -2826,7 +3072,9 @@ func (c *AuthenticationV1Beta1) GetTokenReview(ctx context.Context, name string)
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("authentication.k8s.io", "v1beta1", AllNamespaces, "tokenreviews", name)
+	ns := ""
+	
+	url := c.client.urlFor("authentication.k8s.io", "v1beta1", ns, "tokenreviews", name, "")
 	resp := new(authenticationv1beta1.TokenReview)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -3120,6 +3368,10 @@ func (c *AuthorizationV1Beta1) CreateLocalSubjectAccessReview(ctx context.Contex
 }
 
 func (c *AuthorizationV1Beta1) UpdateLocalSubjectAccessReview(ctx context.Context, obj *authorizationv1beta1.LocalSubjectAccessReview) (*authorizationv1beta1.LocalSubjectAccessReview, error) {
+	return c.UpdateLocalSubjectAccessReviewSubresource(ctx, obj, "")
+}
+
+func (c *AuthorizationV1Beta1) UpdateLocalSubjectAccessReviewSubresource(ctx context.Context, obj *authorizationv1beta1.LocalSubjectAccessReview, subresource string) (*authorizationv1beta1.LocalSubjectAccessReview, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -3139,7 +3391,7 @@ func (c *AuthorizationV1Beta1) UpdateLocalSubjectAccessReview(ctx context.Contex
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("authorization.k8s.io", "v1beta1", *md.Namespace, "localsubjectaccessreviews", *md.Name)
+	url := c.client.urlFor("authorization.k8s.io", "v1beta1", *md.Namespace, "localsubjectaccessreviews", *md.Name, subresource)
 	resp := new(authorizationv1beta1.LocalSubjectAccessReview)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -3152,7 +3404,9 @@ func (c *AuthorizationV1Beta1) DeleteLocalSubjectAccessReview(ctx context.Contex
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("authorization.k8s.io", "v1beta1", namespace, "localsubjectaccessreviews", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("authorization.k8s.io", "v1beta1", ns, "localsubjectaccessreviews", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -3160,7 +3414,9 @@ func (c *AuthorizationV1Beta1) GetLocalSubjectAccessReview(ctx context.Context, 
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("authorization.k8s.io", "v1beta1", namespace, "localsubjectaccessreviews", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("authorization.k8s.io", "v1beta1", ns, "localsubjectaccessreviews", name, "")
 	resp := new(authorizationv1beta1.LocalSubjectAccessReview)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -3198,6 +3454,10 @@ func (c *AuthorizationV1Beta1) CreateSelfSubjectAccessReview(ctx context.Context
 }
 
 func (c *AuthorizationV1Beta1) UpdateSelfSubjectAccessReview(ctx context.Context, obj *authorizationv1beta1.SelfSubjectAccessReview) (*authorizationv1beta1.SelfSubjectAccessReview, error) {
+	return c.UpdateSelfSubjectAccessReviewSubresource(ctx, obj, "")
+}
+
+func (c *AuthorizationV1Beta1) UpdateSelfSubjectAccessReviewSubresource(ctx context.Context, obj *authorizationv1beta1.SelfSubjectAccessReview, subresource string) (*authorizationv1beta1.SelfSubjectAccessReview, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -3217,7 +3477,7 @@ func (c *AuthorizationV1Beta1) UpdateSelfSubjectAccessReview(ctx context.Context
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("authorization.k8s.io", "v1beta1", *md.Namespace, "selfsubjectaccessreviews", *md.Name)
+	url := c.client.urlFor("authorization.k8s.io", "v1beta1", *md.Namespace, "selfsubjectaccessreviews", *md.Name, subresource)
 	resp := new(authorizationv1beta1.SelfSubjectAccessReview)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -3230,7 +3490,9 @@ func (c *AuthorizationV1Beta1) DeleteSelfSubjectAccessReview(ctx context.Context
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("authorization.k8s.io", "v1beta1", AllNamespaces, "selfsubjectaccessreviews", name)
+	ns := ""
+	
+	url := c.client.urlFor("authorization.k8s.io", "v1beta1", ns, "selfsubjectaccessreviews", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -3238,7 +3500,9 @@ func (c *AuthorizationV1Beta1) GetSelfSubjectAccessReview(ctx context.Context, n
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("authorization.k8s.io", "v1beta1", AllNamespaces, "selfsubjectaccessreviews", name)
+	ns := ""
+	
+	url := c.client.urlFor("authorization.k8s.io", "v1beta1", ns, "selfsubjectaccessreviews", name, "")
 	resp := new(authorizationv1beta1.SelfSubjectAccessReview)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -3276,6 +3540,10 @@ func (c *AuthorizationV1Beta1) CreateSubjectAccessReview(ctx context.Context, ob
 }
 
 func (c *AuthorizationV1Beta1) UpdateSubjectAccessReview(ctx context.Context, obj *authorizationv1beta1.SubjectAccessReview) (*authorizationv1beta1.SubjectAccessReview, error) {
+	return c.UpdateSubjectAccessReviewSubresource(ctx, obj, "")
+}
+
+func (c *AuthorizationV1Beta1) UpdateSubjectAccessReviewSubresource(ctx context.Context, obj *authorizationv1beta1.SubjectAccessReview, subresource string) (*authorizationv1beta1.SubjectAccessReview, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -3295,7 +3563,7 @@ func (c *AuthorizationV1Beta1) UpdateSubjectAccessReview(ctx context.Context, ob
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("authorization.k8s.io", "v1beta1", *md.Namespace, "subjectaccessreviews", *md.Name)
+	url := c.client.urlFor("authorization.k8s.io", "v1beta1", *md.Namespace, "subjectaccessreviews", *md.Name, subresource)
 	resp := new(authorizationv1beta1.SubjectAccessReview)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -3308,7 +3576,9 @@ func (c *AuthorizationV1Beta1) DeleteSubjectAccessReview(ctx context.Context, na
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("authorization.k8s.io", "v1beta1", AllNamespaces, "subjectaccessreviews", name)
+	ns := ""
+	
+	url := c.client.urlFor("authorization.k8s.io", "v1beta1", ns, "subjectaccessreviews", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -3316,7 +3586,9 @@ func (c *AuthorizationV1Beta1) GetSubjectAccessReview(ctx context.Context, name 
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("authorization.k8s.io", "v1beta1", AllNamespaces, "subjectaccessreviews", name)
+	ns := ""
+	
+	url := c.client.urlFor("authorization.k8s.io", "v1beta1", ns, "subjectaccessreviews", name, "")
 	resp := new(authorizationv1beta1.SubjectAccessReview)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -3365,6 +3637,10 @@ func (c *AutoscalingV1) CreateHorizontalPodAutoscaler(ctx context.Context, obj *
 }
 
 func (c *AutoscalingV1) UpdateHorizontalPodAutoscaler(ctx context.Context, obj *autoscalingv1.HorizontalPodAutoscaler) (*autoscalingv1.HorizontalPodAutoscaler, error) {
+	return c.UpdateHorizontalPodAutoscalerSubresource(ctx, obj, "")
+}
+
+func (c *AutoscalingV1) UpdateHorizontalPodAutoscalerSubresource(ctx context.Context, obj *autoscalingv1.HorizontalPodAutoscaler, subresource string) (*autoscalingv1.HorizontalPodAutoscaler, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -3384,7 +3660,7 @@ func (c *AutoscalingV1) UpdateHorizontalPodAutoscaler(ctx context.Context, obj *
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("autoscaling", "v1", *md.Namespace, "horizontalpodautoscalers", *md.Name)
+	url := c.client.urlFor("autoscaling", "v1", *md.Namespace, "horizontalpodautoscalers", *md.Name, subresource)
 	resp := new(autoscalingv1.HorizontalPodAutoscaler)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -3397,7 +3673,9 @@ func (c *AutoscalingV1) DeleteHorizontalPodAutoscaler(ctx context.Context, name 
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("autoscaling", "v1", namespace, "horizontalpodautoscalers", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("autoscaling", "v1", ns, "horizontalpodautoscalers", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -3405,7 +3683,9 @@ func (c *AutoscalingV1) GetHorizontalPodAutoscaler(ctx context.Context, name, na
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("autoscaling", "v1", namespace, "horizontalpodautoscalers", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("autoscaling", "v1", ns, "horizontalpodautoscalers", name, "")
 	resp := new(autoscalingv1.HorizontalPodAutoscaler)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -3433,8 +3713,10 @@ func (w *AutoscalingV1HorizontalPodAutoscalerWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *AutoscalingV1) WatchHorizontalPodAutoscalers(ctx context.Context, namespace string, options ...Option) (*AutoscalingV1HorizontalPodAutoscalerWatcher, error) {
-	url := c.client.urlFor("autoscaling", "v1", namespace, "horizontalpodautoscalers", "", options...)
+func (c *AutoscalingV1) WatchHorizontalPodAutoscalers(ctx context.Context, namespace string, options ...Option) (*AutoscalingV1HorizontalPodAutoscalerWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("autoscaling", "v1", ns, "horizontalpodautoscalers", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -3443,7 +3725,9 @@ func (c *AutoscalingV1) WatchHorizontalPodAutoscalers(ctx context.Context, names
 }
 
 func (c *AutoscalingV1) ListHorizontalPodAutoscalers(ctx context.Context, namespace string, options ...Option) (*autoscalingv1.HorizontalPodAutoscalerList, error) {
-	url := c.client.urlFor("autoscaling", "v1", namespace, "horizontalpodautoscalers", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("autoscaling", "v1", ns, "horizontalpodautoscalers", "", "", options...)
 	resp := new(autoscalingv1.HorizontalPodAutoscalerList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -3481,6 +3765,10 @@ func (c *AutoscalingV1) CreateScale(ctx context.Context, obj *autoscalingv1.Scal
 }
 
 func (c *AutoscalingV1) UpdateScale(ctx context.Context, obj *autoscalingv1.Scale) (*autoscalingv1.Scale, error) {
+	return c.UpdateScaleSubresource(ctx, obj, "")
+}
+
+func (c *AutoscalingV1) UpdateScaleSubresource(ctx context.Context, obj *autoscalingv1.Scale, subresource string) (*autoscalingv1.Scale, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -3500,7 +3788,7 @@ func (c *AutoscalingV1) UpdateScale(ctx context.Context, obj *autoscalingv1.Scal
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("autoscaling", "v1", *md.Namespace, "scales", *md.Name)
+	url := c.client.urlFor("autoscaling", "v1", *md.Namespace, "scales", *md.Name, subresource)
 	resp := new(autoscalingv1.Scale)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -3513,7 +3801,9 @@ func (c *AutoscalingV1) DeleteScale(ctx context.Context, name string, namespace 
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("autoscaling", "v1", namespace, "scales", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("autoscaling", "v1", ns, "scales", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -3521,7 +3811,9 @@ func (c *AutoscalingV1) GetScale(ctx context.Context, name, namespace string) (*
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("autoscaling", "v1", namespace, "scales", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("autoscaling", "v1", ns, "scales", name, "")
 	resp := new(autoscalingv1.Scale)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -3569,7 +3861,11 @@ func (c *AutoscalingV2Alpha1) CreateHorizontalPodAutoscaler(ctx context.Context,
 	return resp, nil
 }
 
-func (c *AutoscalingV2Alpha1) UpdateHorizontalPodAutoscaler(ctx context.Context, obj *autoscalingv2alpha1.HorizontalPodAutoscaler) (*autoscalingv2alpha1.HorizontalPodAutoscaler, error) {
+func (c *BatchV1) UpdateJob(ctx context.Context, obj *batchv1.Job) (*batchv1.Job, error) {
+	return c.UpdateJobSubresource(ctx, obj, "")
+}
+
+func (c *BatchV1) UpdateJobSubresource(ctx context.Context, obj *batchv1.Job, subresource string) (*batchv1.Job, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -3589,8 +3885,8 @@ func (c *AutoscalingV2Alpha1) UpdateHorizontalPodAutoscaler(ctx context.Context,
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("autoscaling", "v2alpha1", *md.Namespace, "horizontalpodautoscalers", *md.Name)
-	resp := new(autoscalingv2alpha1.HorizontalPodAutoscaler)
+	url := c.client.urlFor("batch", "v1", *md.Namespace, "jobs", *md.Name, subresource)
+	resp := new(batchv1.Job)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
 		return nil, err
@@ -3602,7 +3898,9 @@ func (c *AutoscalingV2Alpha1) DeleteHorizontalPodAutoscaler(ctx context.Context,
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("autoscaling", "v2alpha1", namespace, "horizontalpodautoscalers", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("batch", "v1", ns, "jobs", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -3610,8 +3908,10 @@ func (c *AutoscalingV2Alpha1) GetHorizontalPodAutoscaler(ctx context.Context, na
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("autoscaling", "v2alpha1", namespace, "horizontalpodautoscalers", name)
-	resp := new(autoscalingv2alpha1.HorizontalPodAutoscaler)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("batch", "v1", ns, "jobs", name, "")
+	resp := new(batchv1.Job)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}
@@ -3638,8 +3938,10 @@ func (w *AutoscalingV2Alpha1HorizontalPodAutoscalerWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *AutoscalingV2Alpha1) WatchHorizontalPodAutoscalers(ctx context.Context, namespace string, options ...Option) (*AutoscalingV2Alpha1HorizontalPodAutoscalerWatcher, error) {
-	url := c.client.urlFor("autoscaling", "v2alpha1", namespace, "horizontalpodautoscalers", "", options...)
+func (c *BatchV1) WatchJobs(ctx context.Context, namespace string, options ...Option) (*BatchV1JobWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("batch", "v1", ns, "jobs", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -3647,9 +3949,11 @@ func (c *AutoscalingV2Alpha1) WatchHorizontalPodAutoscalers(ctx context.Context,
 	return &AutoscalingV2Alpha1HorizontalPodAutoscalerWatcher{watcher}, nil
 }
 
-func (c *AutoscalingV2Alpha1) ListHorizontalPodAutoscalers(ctx context.Context, namespace string, options ...Option) (*autoscalingv2alpha1.HorizontalPodAutoscalerList, error) {
-	url := c.client.urlFor("autoscaling", "v2alpha1", namespace, "horizontalpodautoscalers", "", options...)
-	resp := new(autoscalingv2alpha1.HorizontalPodAutoscalerList)
+func (c *BatchV1) ListJobs(ctx context.Context, namespace string, options ...Option) (*batchv1.JobList, error) {
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("batch", "v1", ns, "jobs", "", "", options...)
+	resp := new(batchv1.JobList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}
@@ -3696,7 +4000,11 @@ func (c *BatchV1) CreateJob(ctx context.Context, obj *batchv1.Job) (*batchv1.Job
 	return resp, nil
 }
 
-func (c *BatchV1) UpdateJob(ctx context.Context, obj *batchv1.Job) (*batchv1.Job, error) {
+func (c *BatchV2Alpha1) UpdateCronJob(ctx context.Context, obj *batchv2alpha1.CronJob) (*batchv2alpha1.CronJob, error) {
+	return c.UpdateCronJobSubresource(ctx, obj, "")
+}
+
+func (c *BatchV2Alpha1) UpdateCronJobSubresource(ctx context.Context, obj *batchv2alpha1.CronJob, subresource string) (*batchv2alpha1.CronJob, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -3716,8 +4024,8 @@ func (c *BatchV1) UpdateJob(ctx context.Context, obj *batchv1.Job) (*batchv1.Job
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("batch", "v1", *md.Namespace, "jobs", *md.Name)
-	resp := new(batchv1.Job)
+	url := c.client.urlFor("batch", "v2alpha1", *md.Namespace, "cronjobs", *md.Name, subresource)
+	resp := new(batchv2alpha1.CronJob)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
 		return nil, err
@@ -3729,7 +4037,9 @@ func (c *BatchV1) DeleteJob(ctx context.Context, name string, namespace string) 
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("batch", "v1", namespace, "jobs", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("batch", "v2alpha1", ns, "cronjobs", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -3737,8 +4047,10 @@ func (c *BatchV1) GetJob(ctx context.Context, name, namespace string) (*batchv1.
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("batch", "v1", namespace, "jobs", name)
-	resp := new(batchv1.Job)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("batch", "v2alpha1", ns, "cronjobs", name, "")
+	resp := new(batchv2alpha1.CronJob)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}
@@ -3765,8 +4077,10 @@ func (w *BatchV1JobWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *BatchV1) WatchJobs(ctx context.Context, namespace string, options ...Option) (*BatchV1JobWatcher, error) {
-	url := c.client.urlFor("batch", "v1", namespace, "jobs", "", options...)
+func (c *BatchV2Alpha1) WatchCronJobs(ctx context.Context, namespace string, options ...Option) (*BatchV2Alpha1CronJobWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("batch", "v2alpha1", ns, "cronjobs", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -3774,9 +4088,11 @@ func (c *BatchV1) WatchJobs(ctx context.Context, namespace string, options ...Op
 	return &BatchV1JobWatcher{watcher}, nil
 }
 
-func (c *BatchV1) ListJobs(ctx context.Context, namespace string, options ...Option) (*batchv1.JobList, error) {
-	url := c.client.urlFor("batch", "v1", namespace, "jobs", "", options...)
-	resp := new(batchv1.JobList)
+func (c *BatchV2Alpha1) ListCronJobs(ctx context.Context, namespace string, options ...Option) (*batchv2alpha1.CronJobList, error) {
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("batch", "v2alpha1", ns, "cronjobs", "", "", options...)
+	resp := new(batchv2alpha1.CronJobList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}
@@ -3823,7 +4139,11 @@ func (c *BatchV2Alpha1) CreateCronJob(ctx context.Context, obj *batchv2alpha1.Cr
 	return resp, nil
 }
 
-func (c *BatchV2Alpha1) UpdateCronJob(ctx context.Context, obj *batchv2alpha1.CronJob) (*batchv2alpha1.CronJob, error) {
+func (c *BatchV2Alpha1) UpdateJob(ctx context.Context, obj *batchv2alpha1.Job) (*batchv2alpha1.Job, error) {
+	return c.UpdateJobSubresource(ctx, obj, "")
+}
+
+func (c *BatchV2Alpha1) UpdateJobSubresource(ctx context.Context, obj *batchv2alpha1.Job, subresource string) (*batchv2alpha1.Job, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -3843,8 +4163,8 @@ func (c *BatchV2Alpha1) UpdateCronJob(ctx context.Context, obj *batchv2alpha1.Cr
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("batch", "v2alpha1", *md.Namespace, "cronjobs", *md.Name)
-	resp := new(batchv2alpha1.CronJob)
+	url := c.client.urlFor("batch", "v2alpha1", *md.Namespace, "jobs", *md.Name, subresource)
+	resp := new(batchv2alpha1.Job)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
 		return nil, err
@@ -3856,7 +4176,9 @@ func (c *BatchV2Alpha1) DeleteCronJob(ctx context.Context, name string, namespac
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("batch", "v2alpha1", namespace, "cronjobs", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("batch", "v2alpha1", ns, "jobs", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -3864,8 +4186,10 @@ func (c *BatchV2Alpha1) GetCronJob(ctx context.Context, name, namespace string) 
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("batch", "v2alpha1", namespace, "cronjobs", name)
-	resp := new(batchv2alpha1.CronJob)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("batch", "v2alpha1", ns, "jobs", name, "")
+	resp := new(batchv2alpha1.Job)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}
@@ -3892,8 +4216,10 @@ func (w *BatchV2Alpha1CronJobWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *BatchV2Alpha1) WatchCronJobs(ctx context.Context, namespace string, options ...Option) (*BatchV2Alpha1CronJobWatcher, error) {
-	url := c.client.urlFor("batch", "v2alpha1", namespace, "cronjobs", "", options...)
+func (c *BatchV2Alpha1) WatchJobs(ctx context.Context, namespace string, options ...Option) (*BatchV2Alpha1JobWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("batch", "v2alpha1", ns, "jobs", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -3901,9 +4227,11 @@ func (c *BatchV2Alpha1) WatchCronJobs(ctx context.Context, namespace string, opt
 	return &BatchV2Alpha1CronJobWatcher{watcher}, nil
 }
 
-func (c *BatchV2Alpha1) ListCronJobs(ctx context.Context, namespace string, options ...Option) (*batchv2alpha1.CronJobList, error) {
-	url := c.client.urlFor("batch", "v2alpha1", namespace, "cronjobs", "", options...)
-	resp := new(batchv2alpha1.CronJobList)
+func (c *BatchV2Alpha1) ListJobs(ctx context.Context, namespace string, options ...Option) (*batchv2alpha1.JobList, error) {
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("batch", "v2alpha1", ns, "jobs", "", "", options...)
+	resp := new(batchv2alpha1.JobList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}
@@ -3940,6 +4268,10 @@ func (c *BatchV2Alpha1) CreateJobTemplate(ctx context.Context, obj *batchv2alpha
 }
 
 func (c *BatchV2Alpha1) UpdateJobTemplate(ctx context.Context, obj *batchv2alpha1.JobTemplate) (*batchv2alpha1.JobTemplate, error) {
+	return c.UpdateJobTemplateSubresource(ctx, obj, "")
+}
+
+func (c *BatchV2Alpha1) UpdateJobTemplateSubresource(ctx context.Context, obj *batchv2alpha1.JobTemplate, subresource string) (*batchv2alpha1.JobTemplate, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -3959,7 +4291,7 @@ func (c *BatchV2Alpha1) UpdateJobTemplate(ctx context.Context, obj *batchv2alpha
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("batch", "v2alpha1", *md.Namespace, "jobtemplates", *md.Name)
+	url := c.client.urlFor("batch", "v2alpha1", *md.Namespace, "jobtemplates", *md.Name, subresource)
 	resp := new(batchv2alpha1.JobTemplate)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -3972,7 +4304,9 @@ func (c *BatchV2Alpha1) DeleteJobTemplate(ctx context.Context, name string, name
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("batch", "v2alpha1", namespace, "jobtemplates", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("batch", "v2alpha1", ns, "jobtemplates", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -3980,7 +4314,9 @@ func (c *BatchV2Alpha1) GetJobTemplate(ctx context.Context, name, namespace stri
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("batch", "v2alpha1", namespace, "jobtemplates", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("batch", "v2alpha1", ns, "jobtemplates", name, "")
 	resp := new(batchv2alpha1.JobTemplate)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -4029,6 +4365,10 @@ func (c *CertificatesV1Alpha1) CreateCertificateSigningRequest(ctx context.Conte
 }
 
 func (c *CertificatesV1Alpha1) UpdateCertificateSigningRequest(ctx context.Context, obj *certificatesv1alpha1.CertificateSigningRequest) (*certificatesv1alpha1.CertificateSigningRequest, error) {
+	return c.UpdateCertificateSigningRequestSubresource(ctx, obj, "")
+}
+
+func (c *CertificatesV1Alpha1) UpdateCertificateSigningRequestSubresource(ctx context.Context, obj *certificatesv1alpha1.CertificateSigningRequest, subresource string) (*certificatesv1alpha1.CertificateSigningRequest, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -4048,7 +4388,7 @@ func (c *CertificatesV1Alpha1) UpdateCertificateSigningRequest(ctx context.Conte
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("certificates.k8s.io", "v1alpha1", *md.Namespace, "certificatesigningrequests", *md.Name)
+	url := c.client.urlFor("certificates.k8s.io", "v1alpha1", *md.Namespace, "certificatesigningrequests", *md.Name, subresource)
 	resp := new(certificatesv1alpha1.CertificateSigningRequest)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -4061,7 +4401,9 @@ func (c *CertificatesV1Alpha1) DeleteCertificateSigningRequest(ctx context.Conte
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("certificates.k8s.io", "v1alpha1", AllNamespaces, "certificatesigningrequests", name)
+	ns := ""
+	
+	url := c.client.urlFor("certificates.k8s.io", "v1alpha1", ns, "certificatesigningrequests", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -4069,7 +4411,9 @@ func (c *CertificatesV1Alpha1) GetCertificateSigningRequest(ctx context.Context,
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("certificates.k8s.io", "v1alpha1", AllNamespaces, "certificatesigningrequests", name)
+	ns := ""
+	
+	url := c.client.urlFor("certificates.k8s.io", "v1alpha1", ns, "certificatesigningrequests", name, "")
 	resp := new(certificatesv1alpha1.CertificateSigningRequest)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -4097,8 +4441,9 @@ func (w *CertificatesV1Alpha1CertificateSigningRequestWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CertificatesV1Alpha1) WatchCertificateSigningRequests(ctx context.Context, options ...Option) (*CertificatesV1Alpha1CertificateSigningRequestWatcher, error) {
-	url := c.client.urlFor("certificates.k8s.io", "v1alpha1", AllNamespaces, "certificatesigningrequests", "", options...)
+func (c *CertificatesV1Alpha1) WatchCertificateSigningRequests(ctx context.Context, options ...Option) (*CertificatesV1Alpha1CertificateSigningRequestWatcher, error){
+	ns := ""
+	url := c.client.urlFor("certificates.k8s.io", "v1alpha1", ns, "certificatesigningrequests", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -4107,7 +4452,8 @@ func (c *CertificatesV1Alpha1) WatchCertificateSigningRequests(ctx context.Conte
 }
 
 func (c *CertificatesV1Alpha1) ListCertificateSigningRequests(ctx context.Context, options ...Option) (*certificatesv1alpha1.CertificateSigningRequestList, error) {
-	url := c.client.urlFor("certificates.k8s.io", "v1alpha1", AllNamespaces, "certificatesigningrequests", "", options...)
+	ns := ""
+	url := c.client.urlFor("certificates.k8s.io", "v1alpha1", ns, "certificatesigningrequests", "", "", options...)
 	resp := new(certificatesv1alpha1.CertificateSigningRequestList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -4155,7 +4501,11 @@ func (c *CertificatesV1Beta1) CreateCertificateSigningRequest(ctx context.Contex
 	return resp, nil
 }
 
-func (c *CertificatesV1Beta1) UpdateCertificateSigningRequest(ctx context.Context, obj *certificatesv1beta1.CertificateSigningRequest) (*certificatesv1beta1.CertificateSigningRequest, error) {
+func (c *ExtensionsV1Beta1) UpdateDaemonSet(ctx context.Context, obj *extensionsv1beta1.DaemonSet) (*extensionsv1beta1.DaemonSet, error) {
+	return c.UpdateDaemonSetSubresource(ctx, obj, "")
+}
+
+func (c *ExtensionsV1Beta1) UpdateDaemonSetSubresource(ctx context.Context, obj *extensionsv1beta1.DaemonSet, subresource string) (*extensionsv1beta1.DaemonSet, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -4175,8 +4525,8 @@ func (c *CertificatesV1Beta1) UpdateCertificateSigningRequest(ctx context.Contex
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("certificates.k8s.io", "v1beta1", *md.Namespace, "certificatesigningrequests", *md.Name)
-	resp := new(certificatesv1beta1.CertificateSigningRequest)
+	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "daemonsets", *md.Name, subresource)
+	resp := new(extensionsv1beta1.DaemonSet)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
 		return nil, err
@@ -4188,7 +4538,9 @@ func (c *CertificatesV1Beta1) DeleteCertificateSigningRequest(ctx context.Contex
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("certificates.k8s.io", "v1beta1", AllNamespaces, "certificatesigningrequests", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "daemonsets", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -4196,8 +4548,10 @@ func (c *CertificatesV1Beta1) GetCertificateSigningRequest(ctx context.Context, 
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("certificates.k8s.io", "v1beta1", AllNamespaces, "certificatesigningrequests", name)
-	resp := new(certificatesv1beta1.CertificateSigningRequest)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "daemonsets", name, "")
+	resp := new(extensionsv1beta1.DaemonSet)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}
@@ -4224,8 +4578,10 @@ func (w *CertificatesV1Beta1CertificateSigningRequestWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *CertificatesV1Beta1) WatchCertificateSigningRequests(ctx context.Context, options ...Option) (*CertificatesV1Beta1CertificateSigningRequestWatcher, error) {
-	url := c.client.urlFor("certificates.k8s.io", "v1beta1", AllNamespaces, "certificatesigningrequests", "", options...)
+func (c *ExtensionsV1Beta1) WatchDaemonSets(ctx context.Context, namespace string, options ...Option) (*ExtensionsV1Beta1DaemonSetWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "daemonsets", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -4233,9 +4589,11 @@ func (c *CertificatesV1Beta1) WatchCertificateSigningRequests(ctx context.Contex
 	return &CertificatesV1Beta1CertificateSigningRequestWatcher{watcher}, nil
 }
 
-func (c *CertificatesV1Beta1) ListCertificateSigningRequests(ctx context.Context, options ...Option) (*certificatesv1beta1.CertificateSigningRequestList, error) {
-	url := c.client.urlFor("certificates.k8s.io", "v1beta1", AllNamespaces, "certificatesigningrequests", "", options...)
-	resp := new(certificatesv1beta1.CertificateSigningRequestList)
+func (c *ExtensionsV1Beta1) ListDaemonSets(ctx context.Context, namespace string, options ...Option) (*extensionsv1beta1.DaemonSetList, error) {
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "daemonsets", "", "", options...)
+	resp := new(extensionsv1beta1.DaemonSetList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}
@@ -4282,7 +4640,11 @@ func (c *ExtensionsV1Beta1) CreateDaemonSet(ctx context.Context, obj *extensions
 	return resp, nil
 }
 
-func (c *ExtensionsV1Beta1) UpdateDaemonSet(ctx context.Context, obj *extensionsv1beta1.DaemonSet) (*extensionsv1beta1.DaemonSet, error) {
+func (c *ExtensionsV1Beta1) UpdateDeployment(ctx context.Context, obj *extensionsv1beta1.Deployment) (*extensionsv1beta1.Deployment, error) {
+	return c.UpdateDeploymentSubresource(ctx, obj, "")
+}
+
+func (c *ExtensionsV1Beta1) UpdateDeploymentSubresource(ctx context.Context, obj *extensionsv1beta1.Deployment, subresource string) (*extensionsv1beta1.Deployment, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -4302,8 +4664,8 @@ func (c *ExtensionsV1Beta1) UpdateDaemonSet(ctx context.Context, obj *extensions
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "daemonsets", *md.Name)
-	resp := new(extensionsv1beta1.DaemonSet)
+	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "deployments", *md.Name, subresource)
+	resp := new(extensionsv1beta1.Deployment)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
 		return nil, err
@@ -4315,7 +4677,9 @@ func (c *ExtensionsV1Beta1) DeleteDaemonSet(ctx context.Context, name string, na
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "daemonsets", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "deployments", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -4323,8 +4687,10 @@ func (c *ExtensionsV1Beta1) GetDaemonSet(ctx context.Context, name, namespace st
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "daemonsets", name)
-	resp := new(extensionsv1beta1.DaemonSet)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "deployments", name, "")
+	resp := new(extensionsv1beta1.Deployment)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}
@@ -4351,8 +4717,10 @@ func (w *ExtensionsV1Beta1DaemonSetWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *ExtensionsV1Beta1) WatchDaemonSets(ctx context.Context, namespace string, options ...Option) (*ExtensionsV1Beta1DaemonSetWatcher, error) {
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "daemonsets", "", options...)
+func (c *ExtensionsV1Beta1) WatchDeployments(ctx context.Context, namespace string, options ...Option) (*ExtensionsV1Beta1DeploymentWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "deployments", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -4360,9 +4728,11 @@ func (c *ExtensionsV1Beta1) WatchDaemonSets(ctx context.Context, namespace strin
 	return &ExtensionsV1Beta1DaemonSetWatcher{watcher}, nil
 }
 
-func (c *ExtensionsV1Beta1) ListDaemonSets(ctx context.Context, namespace string, options ...Option) (*extensionsv1beta1.DaemonSetList, error) {
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "daemonsets", "", options...)
-	resp := new(extensionsv1beta1.DaemonSetList)
+func (c *ExtensionsV1Beta1) ListDeployments(ctx context.Context, namespace string, options ...Option) (*extensionsv1beta1.DeploymentList, error) {
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "deployments", "", "", options...)
+	resp := new(extensionsv1beta1.DeploymentList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}
@@ -4398,7 +4768,11 @@ func (c *ExtensionsV1Beta1) CreateDeployment(ctx context.Context, obj *extension
 	return resp, nil
 }
 
-func (c *ExtensionsV1Beta1) UpdateDeployment(ctx context.Context, obj *extensionsv1beta1.Deployment) (*extensionsv1beta1.Deployment, error) {
+func (c *ExtensionsV1Beta1) UpdateHorizontalPodAutoscaler(ctx context.Context, obj *extensionsv1beta1.HorizontalPodAutoscaler) (*extensionsv1beta1.HorizontalPodAutoscaler, error) {
+	return c.UpdateHorizontalPodAutoscalerSubresource(ctx, obj, "")
+}
+
+func (c *ExtensionsV1Beta1) UpdateHorizontalPodAutoscalerSubresource(ctx context.Context, obj *extensionsv1beta1.HorizontalPodAutoscaler, subresource string) (*extensionsv1beta1.HorizontalPodAutoscaler, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -4418,8 +4792,8 @@ func (c *ExtensionsV1Beta1) UpdateDeployment(ctx context.Context, obj *extension
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "deployments", *md.Name)
-	resp := new(extensionsv1beta1.Deployment)
+	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "horizontalpodautoscalers", *md.Name, subresource)
+	resp := new(extensionsv1beta1.HorizontalPodAutoscaler)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
 		return nil, err
@@ -4431,7 +4805,9 @@ func (c *ExtensionsV1Beta1) DeleteDeployment(ctx context.Context, name string, n
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "deployments", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "horizontalpodautoscalers", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -4439,8 +4815,10 @@ func (c *ExtensionsV1Beta1) GetDeployment(ctx context.Context, name, namespace s
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "deployments", name)
-	resp := new(extensionsv1beta1.Deployment)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "horizontalpodautoscalers", name, "")
+	resp := new(extensionsv1beta1.HorizontalPodAutoscaler)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}
@@ -4467,8 +4845,10 @@ func (w *ExtensionsV1Beta1DeploymentWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *ExtensionsV1Beta1) WatchDeployments(ctx context.Context, namespace string, options ...Option) (*ExtensionsV1Beta1DeploymentWatcher, error) {
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "deployments", "", options...)
+func (c *ExtensionsV1Beta1) WatchHorizontalPodAutoscalers(ctx context.Context, namespace string, options ...Option) (*ExtensionsV1Beta1HorizontalPodAutoscalerWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "horizontalpodautoscalers", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -4476,9 +4856,11 @@ func (c *ExtensionsV1Beta1) WatchDeployments(ctx context.Context, namespace stri
 	return &ExtensionsV1Beta1DeploymentWatcher{watcher}, nil
 }
 
-func (c *ExtensionsV1Beta1) ListDeployments(ctx context.Context, namespace string, options ...Option) (*extensionsv1beta1.DeploymentList, error) {
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "deployments", "", options...)
-	resp := new(extensionsv1beta1.DeploymentList)
+func (c *ExtensionsV1Beta1) ListHorizontalPodAutoscalers(ctx context.Context, namespace string, options ...Option) (*extensionsv1beta1.HorizontalPodAutoscalerList, error) {
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "horizontalpodautoscalers", "", "", options...)
+	resp := new(extensionsv1beta1.HorizontalPodAutoscalerList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}
@@ -4515,6 +4897,10 @@ func (c *ExtensionsV1Beta1) CreateIngress(ctx context.Context, obj *extensionsv1
 }
 
 func (c *ExtensionsV1Beta1) UpdateIngress(ctx context.Context, obj *extensionsv1beta1.Ingress) (*extensionsv1beta1.Ingress, error) {
+	return c.UpdateIngressSubresource(ctx, obj, "")
+}
+
+func (c *ExtensionsV1Beta1) UpdateIngressSubresource(ctx context.Context, obj *extensionsv1beta1.Ingress, subresource string) (*extensionsv1beta1.Ingress, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -4534,7 +4920,7 @@ func (c *ExtensionsV1Beta1) UpdateIngress(ctx context.Context, obj *extensionsv1
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "ingresses", *md.Name)
+	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "ingresses", *md.Name, subresource)
 	resp := new(extensionsv1beta1.Ingress)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -4547,7 +4933,9 @@ func (c *ExtensionsV1Beta1) DeleteIngress(ctx context.Context, name string, name
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "ingresses", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "ingresses", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -4555,7 +4943,9 @@ func (c *ExtensionsV1Beta1) GetIngress(ctx context.Context, name, namespace stri
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "ingresses", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "ingresses", name, "")
 	resp := new(extensionsv1beta1.Ingress)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -4583,8 +4973,10 @@ func (w *ExtensionsV1Beta1IngressWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *ExtensionsV1Beta1) WatchIngresses(ctx context.Context, namespace string, options ...Option) (*ExtensionsV1Beta1IngressWatcher, error) {
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "ingresses", "", options...)
+func (c *ExtensionsV1Beta1) WatchIngresses(ctx context.Context, namespace string, options ...Option) (*ExtensionsV1Beta1IngressWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "ingresses", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -4593,8 +4985,138 @@ func (c *ExtensionsV1Beta1) WatchIngresses(ctx context.Context, namespace string
 }
 
 func (c *ExtensionsV1Beta1) ListIngresses(ctx context.Context, namespace string, options ...Option) (*extensionsv1beta1.IngressList, error) {
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "ingresses", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "ingresses", "", "", options...)
 	resp := new(extensionsv1beta1.IngressList)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *ExtensionsV1Beta1) CreateJob(ctx context.Context, obj *extensionsv1beta1.Job) (*extensionsv1beta1.Job, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !true && ns != ""{
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if true {
+		if ns = c.client.namespaceFor(ns); ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("extensions", "v1beta1", ns, "jobs", "")
+	resp := new(extensionsv1beta1.Job)
+	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *ExtensionsV1Beta1) UpdateJob(ctx context.Context, obj *extensionsv1beta1.Job) (*extensionsv1beta1.Job, error) {
+	return c.UpdateJobSubresource(ctx, obj, "")
+}
+
+func (c *ExtensionsV1Beta1) UpdateJobSubresource(ctx context.Context, obj *extensionsv1beta1.Job, subresource string) (*extensionsv1beta1.Job, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !true && ns != ""{
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if true {
+		if ns = c.client.namespaceFor(ns); ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "jobs", *md.Name, subresource)
+	resp := new(extensionsv1beta1.Job)
+	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *ExtensionsV1Beta1) DeleteJob(ctx context.Context, name string, namespace string) error {
+	if name == "" {
+		return fmt.Errorf("create: no name for given object")
+	}
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "jobs", name, "")
+	return c.client.delete(ctx, pbCodec, url)
+}
+
+func (c *ExtensionsV1Beta1) GetJob(ctx context.Context, name, namespace string) (*extensionsv1beta1.Job, error) {
+	if name == "" {
+		return nil, fmt.Errorf("create: no name for given object")
+	}
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "jobs", name, "")
+	resp := new(extensionsv1beta1.Job)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+type ExtensionsV1Beta1JobWatcher struct {
+	watcher *watcher
+}
+
+func (w *ExtensionsV1Beta1JobWatcher) Next() (*versioned.Event, *extensionsv1beta1.Job, error) {
+	event, unknown, err := w.watcher.next()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp := new(extensionsv1beta1.Job)
+	if err := proto.Unmarshal(unknown.Raw, resp); err != nil {
+		return nil, nil, err
+	}
+	return event, resp, nil
+}
+
+func (w *ExtensionsV1Beta1JobWatcher) Close() error {
+	return w.watcher.Close()
+}
+
+func (c *ExtensionsV1Beta1) WatchJobs(ctx context.Context, namespace string, options ...Option) (*ExtensionsV1Beta1JobWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "jobs", "", "", options...)
+	watcher, err := c.client.watch(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+	return &ExtensionsV1Beta1JobWatcher{watcher}, nil
+}
+
+func (c *ExtensionsV1Beta1) ListJobs(ctx context.Context, namespace string, options ...Option) (*extensionsv1beta1.JobList, error) {
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "jobs", "", "", options...)
+	resp := new(extensionsv1beta1.JobList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}
@@ -4631,6 +5153,10 @@ func (c *ExtensionsV1Beta1) CreateNetworkPolicy(ctx context.Context, obj *extens
 }
 
 func (c *ExtensionsV1Beta1) UpdateNetworkPolicy(ctx context.Context, obj *extensionsv1beta1.NetworkPolicy) (*extensionsv1beta1.NetworkPolicy, error) {
+	return c.UpdateNetworkPolicySubresource(ctx, obj, "")
+}
+
+func (c *ExtensionsV1Beta1) UpdateNetworkPolicySubresource(ctx context.Context, obj *extensionsv1beta1.NetworkPolicy, subresource string) (*extensionsv1beta1.NetworkPolicy, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -4650,7 +5176,7 @@ func (c *ExtensionsV1Beta1) UpdateNetworkPolicy(ctx context.Context, obj *extens
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "networkpolicies", *md.Name)
+	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "networkpolicies", *md.Name, subresource)
 	resp := new(extensionsv1beta1.NetworkPolicy)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -4663,7 +5189,9 @@ func (c *ExtensionsV1Beta1) DeleteNetworkPolicy(ctx context.Context, name string
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "networkpolicies", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "networkpolicies", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -4671,7 +5199,9 @@ func (c *ExtensionsV1Beta1) GetNetworkPolicy(ctx context.Context, name, namespac
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "networkpolicies", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "networkpolicies", name, "")
 	resp := new(extensionsv1beta1.NetworkPolicy)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -4699,8 +5229,10 @@ func (w *ExtensionsV1Beta1NetworkPolicyWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *ExtensionsV1Beta1) WatchNetworkPolicies(ctx context.Context, namespace string, options ...Option) (*ExtensionsV1Beta1NetworkPolicyWatcher, error) {
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "networkpolicies", "", options...)
+func (c *ExtensionsV1Beta1) WatchNetworkPolicies(ctx context.Context, namespace string, options ...Option) (*ExtensionsV1Beta1NetworkPolicyWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "networkpolicies", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -4709,7 +5241,9 @@ func (c *ExtensionsV1Beta1) WatchNetworkPolicies(ctx context.Context, namespace 
 }
 
 func (c *ExtensionsV1Beta1) ListNetworkPolicies(ctx context.Context, namespace string, options ...Option) (*extensionsv1beta1.NetworkPolicyList, error) {
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "networkpolicies", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "networkpolicies", "", "", options...)
 	resp := new(extensionsv1beta1.NetworkPolicyList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -4747,6 +5281,10 @@ func (c *ExtensionsV1Beta1) CreatePodSecurityPolicy(ctx context.Context, obj *ex
 }
 
 func (c *ExtensionsV1Beta1) UpdatePodSecurityPolicy(ctx context.Context, obj *extensionsv1beta1.PodSecurityPolicy) (*extensionsv1beta1.PodSecurityPolicy, error) {
+	return c.UpdatePodSecurityPolicySubresource(ctx, obj, "")
+}
+
+func (c *ExtensionsV1Beta1) UpdatePodSecurityPolicySubresource(ctx context.Context, obj *extensionsv1beta1.PodSecurityPolicy, subresource string) (*extensionsv1beta1.PodSecurityPolicy, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -4766,7 +5304,7 @@ func (c *ExtensionsV1Beta1) UpdatePodSecurityPolicy(ctx context.Context, obj *ex
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "podsecuritypolicies", *md.Name)
+	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "podsecuritypolicies", *md.Name, subresource)
 	resp := new(extensionsv1beta1.PodSecurityPolicy)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -4779,7 +5317,9 @@ func (c *ExtensionsV1Beta1) DeletePodSecurityPolicy(ctx context.Context, name st
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", AllNamespaces, "podsecuritypolicies", name)
+	ns := ""
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "podsecuritypolicies", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -4787,7 +5327,9 @@ func (c *ExtensionsV1Beta1) GetPodSecurityPolicy(ctx context.Context, name strin
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", AllNamespaces, "podsecuritypolicies", name)
+	ns := ""
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "podsecuritypolicies", name, "")
 	resp := new(extensionsv1beta1.PodSecurityPolicy)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -4815,8 +5357,9 @@ func (w *ExtensionsV1Beta1PodSecurityPolicyWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *ExtensionsV1Beta1) WatchPodSecurityPolicies(ctx context.Context, options ...Option) (*ExtensionsV1Beta1PodSecurityPolicyWatcher, error) {
-	url := c.client.urlFor("extensions", "v1beta1", AllNamespaces, "podsecuritypolicies", "", options...)
+func (c *ExtensionsV1Beta1) WatchPodSecurityPolicies(ctx context.Context, options ...Option) (*ExtensionsV1Beta1PodSecurityPolicyWatcher, error){
+	ns := ""
+	url := c.client.urlFor("extensions", "v1beta1", ns, "podsecuritypolicies", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -4825,7 +5368,8 @@ func (c *ExtensionsV1Beta1) WatchPodSecurityPolicies(ctx context.Context, option
 }
 
 func (c *ExtensionsV1Beta1) ListPodSecurityPolicies(ctx context.Context, options ...Option) (*extensionsv1beta1.PodSecurityPolicyList, error) {
-	url := c.client.urlFor("extensions", "v1beta1", AllNamespaces, "podsecuritypolicies", "", options...)
+	ns := ""
+	url := c.client.urlFor("extensions", "v1beta1", ns, "podsecuritypolicies", "", "", options...)
 	resp := new(extensionsv1beta1.PodSecurityPolicyList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -4863,6 +5407,10 @@ func (c *ExtensionsV1Beta1) CreateReplicaSet(ctx context.Context, obj *extension
 }
 
 func (c *ExtensionsV1Beta1) UpdateReplicaSet(ctx context.Context, obj *extensionsv1beta1.ReplicaSet) (*extensionsv1beta1.ReplicaSet, error) {
+	return c.UpdateReplicaSetSubresource(ctx, obj, "")
+}
+
+func (c *ExtensionsV1Beta1) UpdateReplicaSetSubresource(ctx context.Context, obj *extensionsv1beta1.ReplicaSet, subresource string) (*extensionsv1beta1.ReplicaSet, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -4882,7 +5430,7 @@ func (c *ExtensionsV1Beta1) UpdateReplicaSet(ctx context.Context, obj *extension
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "replicasets", *md.Name)
+	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "replicasets", *md.Name, subresource)
 	resp := new(extensionsv1beta1.ReplicaSet)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -4895,7 +5443,9 @@ func (c *ExtensionsV1Beta1) DeleteReplicaSet(ctx context.Context, name string, n
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "replicasets", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "replicasets", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -4903,7 +5453,9 @@ func (c *ExtensionsV1Beta1) GetReplicaSet(ctx context.Context, name, namespace s
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "replicasets", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "replicasets", name, "")
 	resp := new(extensionsv1beta1.ReplicaSet)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -4931,8 +5483,10 @@ func (w *ExtensionsV1Beta1ReplicaSetWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *ExtensionsV1Beta1) WatchReplicaSets(ctx context.Context, namespace string, options ...Option) (*ExtensionsV1Beta1ReplicaSetWatcher, error) {
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "replicasets", "", options...)
+func (c *ExtensionsV1Beta1) WatchReplicaSets(ctx context.Context, namespace string, options ...Option) (*ExtensionsV1Beta1ReplicaSetWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "replicasets", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -4941,7 +5495,9 @@ func (c *ExtensionsV1Beta1) WatchReplicaSets(ctx context.Context, namespace stri
 }
 
 func (c *ExtensionsV1Beta1) ListReplicaSets(ctx context.Context, namespace string, options ...Option) (*extensionsv1beta1.ReplicaSetList, error) {
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "replicasets", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "replicasets", "", "", options...)
 	resp := new(extensionsv1beta1.ReplicaSetList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -4979,6 +5535,10 @@ func (c *ExtensionsV1Beta1) CreateScale(ctx context.Context, obj *extensionsv1be
 }
 
 func (c *ExtensionsV1Beta1) UpdateScale(ctx context.Context, obj *extensionsv1beta1.Scale) (*extensionsv1beta1.Scale, error) {
+	return c.UpdateScaleSubresource(ctx, obj, "")
+}
+
+func (c *ExtensionsV1Beta1) UpdateScaleSubresource(ctx context.Context, obj *extensionsv1beta1.Scale, subresource string) (*extensionsv1beta1.Scale, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -4998,7 +5558,7 @@ func (c *ExtensionsV1Beta1) UpdateScale(ctx context.Context, obj *extensionsv1be
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "scales", *md.Name)
+	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "scales", *md.Name, subresource)
 	resp := new(extensionsv1beta1.Scale)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -5011,7 +5571,9 @@ func (c *ExtensionsV1Beta1) DeleteScale(ctx context.Context, name string, namesp
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "scales", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "scales", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -5019,7 +5581,9 @@ func (c *ExtensionsV1Beta1) GetScale(ctx context.Context, name, namespace string
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "scales", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "scales", name, "")
 	resp := new(extensionsv1beta1.Scale)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -5057,6 +5621,10 @@ func (c *ExtensionsV1Beta1) CreateThirdPartyResource(ctx context.Context, obj *e
 }
 
 func (c *ExtensionsV1Beta1) UpdateThirdPartyResource(ctx context.Context, obj *extensionsv1beta1.ThirdPartyResource) (*extensionsv1beta1.ThirdPartyResource, error) {
+	return c.UpdateThirdPartyResourceSubresource(ctx, obj, "")
+}
+
+func (c *ExtensionsV1Beta1) UpdateThirdPartyResourceSubresource(ctx context.Context, obj *extensionsv1beta1.ThirdPartyResource, subresource string) (*extensionsv1beta1.ThirdPartyResource, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -5076,7 +5644,7 @@ func (c *ExtensionsV1Beta1) UpdateThirdPartyResource(ctx context.Context, obj *e
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "thirdpartyresources", *md.Name)
+	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "thirdpartyresources", *md.Name, subresource)
 	resp := new(extensionsv1beta1.ThirdPartyResource)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -5089,7 +5657,9 @@ func (c *ExtensionsV1Beta1) DeleteThirdPartyResource(ctx context.Context, name s
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", AllNamespaces, "thirdpartyresources", name)
+	ns := ""
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "thirdpartyresources", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -5097,7 +5667,9 @@ func (c *ExtensionsV1Beta1) GetThirdPartyResource(ctx context.Context, name stri
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", AllNamespaces, "thirdpartyresources", name)
+	ns := ""
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "thirdpartyresources", name, "")
 	resp := new(extensionsv1beta1.ThirdPartyResource)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -5125,8 +5697,9 @@ func (w *ExtensionsV1Beta1ThirdPartyResourceWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *ExtensionsV1Beta1) WatchThirdPartyResources(ctx context.Context, options ...Option) (*ExtensionsV1Beta1ThirdPartyResourceWatcher, error) {
-	url := c.client.urlFor("extensions", "v1beta1", AllNamespaces, "thirdpartyresources", "", options...)
+func (c *ExtensionsV1Beta1) WatchThirdPartyResources(ctx context.Context, options ...Option) (*ExtensionsV1Beta1ThirdPartyResourceWatcher, error){
+	ns := ""
+	url := c.client.urlFor("extensions", "v1beta1", ns, "thirdpartyresources", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -5135,7 +5708,8 @@ func (c *ExtensionsV1Beta1) WatchThirdPartyResources(ctx context.Context, option
 }
 
 func (c *ExtensionsV1Beta1) ListThirdPartyResources(ctx context.Context, options ...Option) (*extensionsv1beta1.ThirdPartyResourceList, error) {
-	url := c.client.urlFor("extensions", "v1beta1", AllNamespaces, "thirdpartyresources", "", options...)
+	ns := ""
+	url := c.client.urlFor("extensions", "v1beta1", ns, "thirdpartyresources", "", "", options...)
 	resp := new(extensionsv1beta1.ThirdPartyResourceList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -5173,6 +5747,10 @@ func (c *ExtensionsV1Beta1) CreateThirdPartyResourceData(ctx context.Context, ob
 }
 
 func (c *ExtensionsV1Beta1) UpdateThirdPartyResourceData(ctx context.Context, obj *extensionsv1beta1.ThirdPartyResourceData) (*extensionsv1beta1.ThirdPartyResourceData, error) {
+	return c.UpdateThirdPartyResourceDataSubresource(ctx, obj, "")
+}
+
+func (c *ExtensionsV1Beta1) UpdateThirdPartyResourceDataSubresource(ctx context.Context, obj *extensionsv1beta1.ThirdPartyResourceData, subresource string) (*extensionsv1beta1.ThirdPartyResourceData, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -5192,7 +5770,7 @@ func (c *ExtensionsV1Beta1) UpdateThirdPartyResourceData(ctx context.Context, ob
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "thirdpartyresourcedatas", *md.Name)
+	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "thirdpartyresourcedatas", *md.Name, subresource)
 	resp := new(extensionsv1beta1.ThirdPartyResourceData)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -5205,7 +5783,9 @@ func (c *ExtensionsV1Beta1) DeleteThirdPartyResourceData(ctx context.Context, na
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "thirdpartyresourcedatas", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "thirdpartyresourcedatas", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -5213,7 +5793,9 @@ func (c *ExtensionsV1Beta1) GetThirdPartyResourceData(ctx context.Context, name,
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "thirdpartyresourcedatas", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "thirdpartyresourcedatas", name, "")
 	resp := new(extensionsv1beta1.ThirdPartyResourceData)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -5241,8 +5823,10 @@ func (w *ExtensionsV1Beta1ThirdPartyResourceDataWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *ExtensionsV1Beta1) WatchThirdPartyResourceDatas(ctx context.Context, namespace string, options ...Option) (*ExtensionsV1Beta1ThirdPartyResourceDataWatcher, error) {
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "thirdpartyresourcedatas", "", options...)
+func (c *ExtensionsV1Beta1) WatchThirdPartyResourceDatas(ctx context.Context, namespace string, options ...Option) (*ExtensionsV1Beta1ThirdPartyResourceDataWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "thirdpartyresourcedatas", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -5251,7 +5835,9 @@ func (c *ExtensionsV1Beta1) WatchThirdPartyResourceDatas(ctx context.Context, na
 }
 
 func (c *ExtensionsV1Beta1) ListThirdPartyResourceDatas(ctx context.Context, namespace string, options ...Option) (*extensionsv1beta1.ThirdPartyResourceDataList, error) {
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "thirdpartyresourcedatas", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("extensions", "v1beta1", ns, "thirdpartyresourcedatas", "", "", options...)
 	resp := new(extensionsv1beta1.ThirdPartyResourceDataList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -5300,6 +5886,10 @@ func (c *ImagepolicyV1Alpha1) CreateImageReview(ctx context.Context, obj *imagep
 }
 
 func (c *ImagepolicyV1Alpha1) UpdateImageReview(ctx context.Context, obj *imagepolicyv1alpha1.ImageReview) (*imagepolicyv1alpha1.ImageReview, error) {
+	return c.UpdateImageReviewSubresource(ctx, obj, "")
+}
+
+func (c *ImagepolicyV1Alpha1) UpdateImageReviewSubresource(ctx context.Context, obj *imagepolicyv1alpha1.ImageReview, subresource string) (*imagepolicyv1alpha1.ImageReview, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -5319,7 +5909,7 @@ func (c *ImagepolicyV1Alpha1) UpdateImageReview(ctx context.Context, obj *imagep
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("imagepolicy", "v1alpha1", *md.Namespace, "imagereviews", *md.Name)
+	url := c.client.urlFor("imagepolicy", "v1alpha1", *md.Namespace, "imagereviews", *md.Name, subresource)
 	resp := new(imagepolicyv1alpha1.ImageReview)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -5332,7 +5922,9 @@ func (c *ImagepolicyV1Alpha1) DeleteImageReview(ctx context.Context, name string
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("imagepolicy", "v1alpha1", AllNamespaces, "imagereviews", name)
+	ns := ""
+	
+	url := c.client.urlFor("imagepolicy", "v1alpha1", ns, "imagereviews", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -5340,7 +5932,9 @@ func (c *ImagepolicyV1Alpha1) GetImageReview(ctx context.Context, name string) (
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("imagepolicy", "v1alpha1", AllNamespaces, "imagereviews", name)
+	ns := ""
+	
+	url := c.client.urlFor("imagepolicy", "v1alpha1", ns, "imagereviews", name, "")
 	resp := new(imagepolicyv1alpha1.ImageReview)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -5389,6 +5983,10 @@ func (c *PolicyV1Alpha1) CreateEviction(ctx context.Context, obj *policyv1alpha1
 }
 
 func (c *PolicyV1Alpha1) UpdateEviction(ctx context.Context, obj *policyv1alpha1.Eviction) (*policyv1alpha1.Eviction, error) {
+	return c.UpdateEvictionSubresource(ctx, obj, "")
+}
+
+func (c *PolicyV1Alpha1) UpdateEvictionSubresource(ctx context.Context, obj *policyv1alpha1.Eviction, subresource string) (*policyv1alpha1.Eviction, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -5408,7 +6006,7 @@ func (c *PolicyV1Alpha1) UpdateEviction(ctx context.Context, obj *policyv1alpha1
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("policy", "v1alpha1", *md.Namespace, "evictions", *md.Name)
+	url := c.client.urlFor("policy", "v1alpha1", *md.Namespace, "evictions", *md.Name, subresource)
 	resp := new(policyv1alpha1.Eviction)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -5421,7 +6019,9 @@ func (c *PolicyV1Alpha1) DeleteEviction(ctx context.Context, name string, namesp
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("policy", "v1alpha1", namespace, "evictions", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("policy", "v1alpha1", ns, "evictions", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -5429,7 +6029,9 @@ func (c *PolicyV1Alpha1) GetEviction(ctx context.Context, name, namespace string
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("policy", "v1alpha1", namespace, "evictions", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("policy", "v1alpha1", ns, "evictions", name, "")
 	resp := new(policyv1alpha1.Eviction)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -5467,6 +6069,10 @@ func (c *PolicyV1Alpha1) CreatePodDisruptionBudget(ctx context.Context, obj *pol
 }
 
 func (c *PolicyV1Alpha1) UpdatePodDisruptionBudget(ctx context.Context, obj *policyv1alpha1.PodDisruptionBudget) (*policyv1alpha1.PodDisruptionBudget, error) {
+	return c.UpdatePodDisruptionBudgetSubresource(ctx, obj, "")
+}
+
+func (c *PolicyV1Alpha1) UpdatePodDisruptionBudgetSubresource(ctx context.Context, obj *policyv1alpha1.PodDisruptionBudget, subresource string) (*policyv1alpha1.PodDisruptionBudget, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -5486,7 +6092,7 @@ func (c *PolicyV1Alpha1) UpdatePodDisruptionBudget(ctx context.Context, obj *pol
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("policy", "v1alpha1", *md.Namespace, "poddisruptionbudgets", *md.Name)
+	url := c.client.urlFor("policy", "v1alpha1", *md.Namespace, "poddisruptionbudgets", *md.Name, subresource)
 	resp := new(policyv1alpha1.PodDisruptionBudget)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -5499,7 +6105,9 @@ func (c *PolicyV1Alpha1) DeletePodDisruptionBudget(ctx context.Context, name str
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("policy", "v1alpha1", namespace, "poddisruptionbudgets", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("policy", "v1alpha1", ns, "poddisruptionbudgets", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -5507,7 +6115,9 @@ func (c *PolicyV1Alpha1) GetPodDisruptionBudget(ctx context.Context, name, names
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("policy", "v1alpha1", namespace, "poddisruptionbudgets", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("policy", "v1alpha1", ns, "poddisruptionbudgets", name, "")
 	resp := new(policyv1alpha1.PodDisruptionBudget)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -5535,8 +6145,10 @@ func (w *PolicyV1Alpha1PodDisruptionBudgetWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *PolicyV1Alpha1) WatchPodDisruptionBudgets(ctx context.Context, namespace string, options ...Option) (*PolicyV1Alpha1PodDisruptionBudgetWatcher, error) {
-	url := c.client.urlFor("policy", "v1alpha1", namespace, "poddisruptionbudgets", "", options...)
+func (c *PolicyV1Alpha1) WatchPodDisruptionBudgets(ctx context.Context, namespace string, options ...Option) (*PolicyV1Alpha1PodDisruptionBudgetWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("policy", "v1alpha1", ns, "poddisruptionbudgets", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -5545,7 +6157,9 @@ func (c *PolicyV1Alpha1) WatchPodDisruptionBudgets(ctx context.Context, namespac
 }
 
 func (c *PolicyV1Alpha1) ListPodDisruptionBudgets(ctx context.Context, namespace string, options ...Option) (*policyv1alpha1.PodDisruptionBudgetList, error) {
-	url := c.client.urlFor("policy", "v1alpha1", namespace, "poddisruptionbudgets", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("policy", "v1alpha1", ns, "poddisruptionbudgets", "", "", options...)
 	resp := new(policyv1alpha1.PodDisruptionBudgetList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -5594,6 +6208,10 @@ func (c *PolicyV1Beta1) CreateEviction(ctx context.Context, obj *policyv1beta1.E
 }
 
 func (c *PolicyV1Beta1) UpdateEviction(ctx context.Context, obj *policyv1beta1.Eviction) (*policyv1beta1.Eviction, error) {
+	return c.UpdateEvictionSubresource(ctx, obj, "")
+}
+
+func (c *PolicyV1Beta1) UpdateEvictionSubresource(ctx context.Context, obj *policyv1beta1.Eviction, subresource string) (*policyv1beta1.Eviction, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -5613,7 +6231,7 @@ func (c *PolicyV1Beta1) UpdateEviction(ctx context.Context, obj *policyv1beta1.E
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("policy", "v1beta1", *md.Namespace, "evictions", *md.Name)
+	url := c.client.urlFor("policy", "v1beta1", *md.Namespace, "evictions", *md.Name, subresource)
 	resp := new(policyv1beta1.Eviction)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -5626,7 +6244,9 @@ func (c *PolicyV1Beta1) DeleteEviction(ctx context.Context, name string, namespa
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("policy", "v1beta1", namespace, "evictions", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("policy", "v1beta1", ns, "evictions", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -5634,7 +6254,9 @@ func (c *PolicyV1Beta1) GetEviction(ctx context.Context, name, namespace string)
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("policy", "v1beta1", namespace, "evictions", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("policy", "v1beta1", ns, "evictions", name, "")
 	resp := new(policyv1beta1.Eviction)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -5672,6 +6294,10 @@ func (c *PolicyV1Beta1) CreatePodDisruptionBudget(ctx context.Context, obj *poli
 }
 
 func (c *PolicyV1Beta1) UpdatePodDisruptionBudget(ctx context.Context, obj *policyv1beta1.PodDisruptionBudget) (*policyv1beta1.PodDisruptionBudget, error) {
+	return c.UpdatePodDisruptionBudgetSubresource(ctx, obj, "")
+}
+
+func (c *PolicyV1Beta1) UpdatePodDisruptionBudgetSubresource(ctx context.Context, obj *policyv1beta1.PodDisruptionBudget, subresource string) (*policyv1beta1.PodDisruptionBudget, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -5691,7 +6317,7 @@ func (c *PolicyV1Beta1) UpdatePodDisruptionBudget(ctx context.Context, obj *poli
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("policy", "v1beta1", *md.Namespace, "poddisruptionbudgets", *md.Name)
+	url := c.client.urlFor("policy", "v1beta1", *md.Namespace, "poddisruptionbudgets", *md.Name, subresource)
 	resp := new(policyv1beta1.PodDisruptionBudget)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -5704,7 +6330,9 @@ func (c *PolicyV1Beta1) DeletePodDisruptionBudget(ctx context.Context, name stri
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("policy", "v1beta1", namespace, "poddisruptionbudgets", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("policy", "v1beta1", ns, "poddisruptionbudgets", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -5712,7 +6340,9 @@ func (c *PolicyV1Beta1) GetPodDisruptionBudget(ctx context.Context, name, namesp
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("policy", "v1beta1", namespace, "poddisruptionbudgets", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("policy", "v1beta1", ns, "poddisruptionbudgets", name, "")
 	resp := new(policyv1beta1.PodDisruptionBudget)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -5740,8 +6370,10 @@ func (w *PolicyV1Beta1PodDisruptionBudgetWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *PolicyV1Beta1) WatchPodDisruptionBudgets(ctx context.Context, namespace string, options ...Option) (*PolicyV1Beta1PodDisruptionBudgetWatcher, error) {
-	url := c.client.urlFor("policy", "v1beta1", namespace, "poddisruptionbudgets", "", options...)
+func (c *PolicyV1Beta1) WatchPodDisruptionBudgets(ctx context.Context, namespace string, options ...Option) (*PolicyV1Beta1PodDisruptionBudgetWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("policy", "v1beta1", ns, "poddisruptionbudgets", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -5750,7 +6382,9 @@ func (c *PolicyV1Beta1) WatchPodDisruptionBudgets(ctx context.Context, namespace
 }
 
 func (c *PolicyV1Beta1) ListPodDisruptionBudgets(ctx context.Context, namespace string, options ...Option) (*policyv1beta1.PodDisruptionBudgetList, error) {
-	url := c.client.urlFor("policy", "v1beta1", namespace, "poddisruptionbudgets", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("policy", "v1beta1", ns, "poddisruptionbudgets", "", "", options...)
 	resp := new(policyv1beta1.PodDisruptionBudgetList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -5799,6 +6433,10 @@ func (c *RBACV1Alpha1) CreateClusterRole(ctx context.Context, obj *rbacv1alpha1.
 }
 
 func (c *RBACV1Alpha1) UpdateClusterRole(ctx context.Context, obj *rbacv1alpha1.ClusterRole) (*rbacv1alpha1.ClusterRole, error) {
+	return c.UpdateClusterRoleSubresource(ctx, obj, "")
+}
+
+func (c *RBACV1Alpha1) UpdateClusterRoleSubresource(ctx context.Context, obj *rbacv1alpha1.ClusterRole, subresource string) (*rbacv1alpha1.ClusterRole, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -5818,7 +6456,7 @@ func (c *RBACV1Alpha1) UpdateClusterRole(ctx context.Context, obj *rbacv1alpha1.
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", *md.Namespace, "clusterroles", *md.Name)
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", *md.Namespace, "clusterroles", *md.Name, subresource)
 	resp := new(rbacv1alpha1.ClusterRole)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -5831,7 +6469,9 @@ func (c *RBACV1Alpha1) DeleteClusterRole(ctx context.Context, name string) error
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", AllNamespaces, "clusterroles", name)
+	ns := ""
+	
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", ns, "clusterroles", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -5839,7 +6479,9 @@ func (c *RBACV1Alpha1) GetClusterRole(ctx context.Context, name string) (*rbacv1
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", AllNamespaces, "clusterroles", name)
+	ns := ""
+	
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", ns, "clusterroles", name, "")
 	resp := new(rbacv1alpha1.ClusterRole)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -5867,8 +6509,9 @@ func (w *RBACV1Alpha1ClusterRoleWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *RBACV1Alpha1) WatchClusterRoles(ctx context.Context, options ...Option) (*RBACV1Alpha1ClusterRoleWatcher, error) {
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", AllNamespaces, "clusterroles", "", options...)
+func (c *RBACV1Alpha1) WatchClusterRoles(ctx context.Context, options ...Option) (*RBACV1Alpha1ClusterRoleWatcher, error){
+	ns := ""
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", ns, "clusterroles", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -5877,7 +6520,8 @@ func (c *RBACV1Alpha1) WatchClusterRoles(ctx context.Context, options ...Option)
 }
 
 func (c *RBACV1Alpha1) ListClusterRoles(ctx context.Context, options ...Option) (*rbacv1alpha1.ClusterRoleList, error) {
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", AllNamespaces, "clusterroles", "", options...)
+	ns := ""
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", ns, "clusterroles", "", "", options...)
 	resp := new(rbacv1alpha1.ClusterRoleList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -5915,6 +6559,10 @@ func (c *RBACV1Alpha1) CreateClusterRoleBinding(ctx context.Context, obj *rbacv1
 }
 
 func (c *RBACV1Alpha1) UpdateClusterRoleBinding(ctx context.Context, obj *rbacv1alpha1.ClusterRoleBinding) (*rbacv1alpha1.ClusterRoleBinding, error) {
+	return c.UpdateClusterRoleBindingSubresource(ctx, obj, "")
+}
+
+func (c *RBACV1Alpha1) UpdateClusterRoleBindingSubresource(ctx context.Context, obj *rbacv1alpha1.ClusterRoleBinding, subresource string) (*rbacv1alpha1.ClusterRoleBinding, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -5934,7 +6582,7 @@ func (c *RBACV1Alpha1) UpdateClusterRoleBinding(ctx context.Context, obj *rbacv1
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", *md.Namespace, "clusterrolebindings", *md.Name)
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", *md.Namespace, "clusterrolebindings", *md.Name, subresource)
 	resp := new(rbacv1alpha1.ClusterRoleBinding)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -5947,7 +6595,9 @@ func (c *RBACV1Alpha1) DeleteClusterRoleBinding(ctx context.Context, name string
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", AllNamespaces, "clusterrolebindings", name)
+	ns := ""
+	
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", ns, "clusterrolebindings", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -5955,7 +6605,9 @@ func (c *RBACV1Alpha1) GetClusterRoleBinding(ctx context.Context, name string) (
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", AllNamespaces, "clusterrolebindings", name)
+	ns := ""
+	
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", ns, "clusterrolebindings", name, "")
 	resp := new(rbacv1alpha1.ClusterRoleBinding)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -5983,8 +6635,9 @@ func (w *RBACV1Alpha1ClusterRoleBindingWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *RBACV1Alpha1) WatchClusterRoleBindings(ctx context.Context, options ...Option) (*RBACV1Alpha1ClusterRoleBindingWatcher, error) {
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", AllNamespaces, "clusterrolebindings", "", options...)
+func (c *RBACV1Alpha1) WatchClusterRoleBindings(ctx context.Context, options ...Option) (*RBACV1Alpha1ClusterRoleBindingWatcher, error){
+	ns := ""
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", ns, "clusterrolebindings", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -5993,7 +6646,8 @@ func (c *RBACV1Alpha1) WatchClusterRoleBindings(ctx context.Context, options ...
 }
 
 func (c *RBACV1Alpha1) ListClusterRoleBindings(ctx context.Context, options ...Option) (*rbacv1alpha1.ClusterRoleBindingList, error) {
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", AllNamespaces, "clusterrolebindings", "", options...)
+	ns := ""
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", ns, "clusterrolebindings", "", "", options...)
 	resp := new(rbacv1alpha1.ClusterRoleBindingList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -6031,6 +6685,10 @@ func (c *RBACV1Alpha1) CreateRole(ctx context.Context, obj *rbacv1alpha1.Role) (
 }
 
 func (c *RBACV1Alpha1) UpdateRole(ctx context.Context, obj *rbacv1alpha1.Role) (*rbacv1alpha1.Role, error) {
+	return c.UpdateRoleSubresource(ctx, obj, "")
+}
+
+func (c *RBACV1Alpha1) UpdateRoleSubresource(ctx context.Context, obj *rbacv1alpha1.Role, subresource string) (*rbacv1alpha1.Role, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -6050,7 +6708,7 @@ func (c *RBACV1Alpha1) UpdateRole(ctx context.Context, obj *rbacv1alpha1.Role) (
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", *md.Namespace, "roles", *md.Name)
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", *md.Namespace, "roles", *md.Name, subresource)
 	resp := new(rbacv1alpha1.Role)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -6063,7 +6721,9 @@ func (c *RBACV1Alpha1) DeleteRole(ctx context.Context, name string, namespace st
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", namespace, "roles", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", ns, "roles", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -6071,7 +6731,9 @@ func (c *RBACV1Alpha1) GetRole(ctx context.Context, name, namespace string) (*rb
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", namespace, "roles", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", ns, "roles", name, "")
 	resp := new(rbacv1alpha1.Role)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -6099,8 +6761,10 @@ func (w *RBACV1Alpha1RoleWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *RBACV1Alpha1) WatchRoles(ctx context.Context, namespace string, options ...Option) (*RBACV1Alpha1RoleWatcher, error) {
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", namespace, "roles", "", options...)
+func (c *RBACV1Alpha1) WatchRoles(ctx context.Context, namespace string, options ...Option) (*RBACV1Alpha1RoleWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", ns, "roles", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -6109,7 +6773,9 @@ func (c *RBACV1Alpha1) WatchRoles(ctx context.Context, namespace string, options
 }
 
 func (c *RBACV1Alpha1) ListRoles(ctx context.Context, namespace string, options ...Option) (*rbacv1alpha1.RoleList, error) {
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", namespace, "roles", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", ns, "roles", "", "", options...)
 	resp := new(rbacv1alpha1.RoleList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -6147,6 +6813,10 @@ func (c *RBACV1Alpha1) CreateRoleBinding(ctx context.Context, obj *rbacv1alpha1.
 }
 
 func (c *RBACV1Alpha1) UpdateRoleBinding(ctx context.Context, obj *rbacv1alpha1.RoleBinding) (*rbacv1alpha1.RoleBinding, error) {
+	return c.UpdateRoleBindingSubresource(ctx, obj, "")
+}
+
+func (c *RBACV1Alpha1) UpdateRoleBindingSubresource(ctx context.Context, obj *rbacv1alpha1.RoleBinding, subresource string) (*rbacv1alpha1.RoleBinding, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -6166,7 +6836,7 @@ func (c *RBACV1Alpha1) UpdateRoleBinding(ctx context.Context, obj *rbacv1alpha1.
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", *md.Namespace, "rolebindings", *md.Name)
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", *md.Namespace, "rolebindings", *md.Name, subresource)
 	resp := new(rbacv1alpha1.RoleBinding)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -6179,7 +6849,9 @@ func (c *RBACV1Alpha1) DeleteRoleBinding(ctx context.Context, name string, names
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", namespace, "rolebindings", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", ns, "rolebindings", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -6187,7 +6859,9 @@ func (c *RBACV1Alpha1) GetRoleBinding(ctx context.Context, name, namespace strin
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", namespace, "rolebindings", name)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", ns, "rolebindings", name, "")
 	resp := new(rbacv1alpha1.RoleBinding)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -6215,8 +6889,10 @@ func (w *RBACV1Alpha1RoleBindingWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *RBACV1Alpha1) WatchRoleBindings(ctx context.Context, namespace string, options ...Option) (*RBACV1Alpha1RoleBindingWatcher, error) {
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", namespace, "rolebindings", "", options...)
+func (c *RBACV1Alpha1) WatchRoleBindings(ctx context.Context, namespace string, options ...Option) (*RBACV1Alpha1RoleBindingWatcher, error){
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", ns, "rolebindings", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -6225,7 +6901,9 @@ func (c *RBACV1Alpha1) WatchRoleBindings(ctx context.Context, namespace string, 
 }
 
 func (c *RBACV1Alpha1) ListRoleBindings(ctx context.Context, namespace string, options ...Option) (*rbacv1alpha1.RoleBindingList, error) {
-	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", namespace, "rolebindings", "", options...)
+	ns := c.client.namespaceFor(namespace)
+	
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", ns, "rolebindings", "", "", options...)
 	resp := new(rbacv1alpha1.RoleBindingList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -7003,6 +7681,10 @@ func (c *StorageV1Beta1) CreateStorageClass(ctx context.Context, obj *storagev1b
 }
 
 func (c *StorageV1Beta1) UpdateStorageClass(ctx context.Context, obj *storagev1beta1.StorageClass) (*storagev1beta1.StorageClass, error) {
+	return c.UpdateStorageClassSubresource(ctx, obj, "")
+}
+
+func (c *StorageV1Beta1) UpdateStorageClassSubresource(ctx context.Context, obj *storagev1beta1.StorageClass, subresource string) (*storagev1beta1.StorageClass, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -7022,7 +7704,7 @@ func (c *StorageV1Beta1) UpdateStorageClass(ctx context.Context, obj *storagev1b
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("storage.k8s.io", "v1beta1", *md.Namespace, "storageclasses", *md.Name)
+	url := c.client.urlFor("storage.k8s.io", "v1beta1", *md.Namespace, "storageclasses", *md.Name, subresource)
 	resp := new(storagev1beta1.StorageClass)
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -7035,7 +7717,9 @@ func (c *StorageV1Beta1) DeleteStorageClass(ctx context.Context, name string) er
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("storage.k8s.io", "v1beta1", AllNamespaces, "storageclasses", name)
+	ns := ""
+	
+	url := c.client.urlFor("storage.k8s.io", "v1beta1", ns, "storageclasses", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -7043,7 +7727,9 @@ func (c *StorageV1Beta1) GetStorageClass(ctx context.Context, name string) (*sto
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("storage.k8s.io", "v1beta1", AllNamespaces, "storageclasses", name)
+	ns := ""
+	
+	url := c.client.urlFor("storage.k8s.io", "v1beta1", ns, "storageclasses", name, "")
 	resp := new(storagev1beta1.StorageClass)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -7071,8 +7757,9 @@ func (w *StorageV1Beta1StorageClassWatcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *StorageV1Beta1) WatchStorageClasses(ctx context.Context, options ...Option) (*StorageV1Beta1StorageClassWatcher, error) {
-	url := c.client.urlFor("storage.k8s.io", "v1beta1", AllNamespaces, "storageclasses", "", options...)
+func (c *StorageV1Beta1) WatchStorageClasses(ctx context.Context, options ...Option) (*StorageV1Beta1StorageClassWatcher, error){
+	ns := ""
+	url := c.client.urlFor("storage.k8s.io", "v1beta1", ns, "storageclasses", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -7081,7 +7768,8 @@ func (c *StorageV1Beta1) WatchStorageClasses(ctx context.Context, options ...Opt
 }
 
 func (c *StorageV1Beta1) ListStorageClasses(ctx context.Context, options ...Option) (*storagev1beta1.StorageClassList, error) {
-	url := c.client.urlFor("storage.k8s.io", "v1beta1", AllNamespaces, "storageclasses", "", options...)
+	ns := ""
+	url := c.client.urlFor("storage.k8s.io", "v1beta1", ns, "storageclasses", "", "", options...)
 	resp := new(storagev1beta1.StorageClassList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err

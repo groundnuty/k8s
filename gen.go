@@ -130,6 +130,10 @@ func (c *{{ $.Name }}) Create{{ $r.Name }}(ctx context.Context, obj *{{ $.Import
 }
 
 func (c *{{ $.Name }}) Update{{ $r.Name }}(ctx context.Context, obj *{{ $.ImportName }}.{{ $r.Name }}) (*{{ $.ImportName }}.{{ $r.Name }}, error) {
+	return c.Update{{ $r.Name }}Subresource(ctx, obj, "")
+}
+
+func (c *{{ $.Name }}) Update{{ $r.Name }}Subresource(ctx context.Context, obj *{{ $.ImportName }}.{{ $r.Name }}, subresource string) (*{{ $.ImportName }}.{{ $r.Name }}, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
 		return nil, fmt.Errorf("no name for given object")
@@ -149,7 +153,7 @@ func (c *{{ $.Name }}) Update{{ $r.Name }}(ctx context.Context, obj *{{ $.Import
 		}
 		md.Namespace = &ns
 	}
-	url := c.client.urlFor("{{ $.APIGroup }}", "{{ $.APIVersion }}", *md.Namespace, "{{ $r.Pluralized }}", *md.Name)
+	url := c.client.urlFor("{{ $.APIGroup }}", "{{ $.APIVersion }}", *md.Namespace, "{{ $r.Pluralized }}", *md.Name, subresource)
 	resp := new({{ $.ImportName }}.{{ $r.Name }})
 	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
 	if err != nil {
@@ -162,7 +166,12 @@ func (c *{{ $.Name }}) Delete{{ $r.Name }}(ctx context.Context, name string{{ if
 	if name == "" {
 		return fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("{{ $.APIGroup }}", "{{ $.APIVersion }}", {{ if $r.Namespaced }}namespace{{ else }}AllNamespaces{{ end }}, "{{ $r.Pluralized }}", name)
+	{{ if $r.Namespaced -}}
+	ns := c.client.namespaceFor(namespace)
+	{{ else -}}
+	ns := ""
+	{{ end }}
+	url := c.client.urlFor("{{ $.APIGroup }}", "{{ $.APIVersion }}", ns, "{{ $r.Pluralized }}", name, "")
 	return c.client.delete(ctx, pbCodec, url)
 }
 
@@ -170,7 +179,12 @@ func (c *{{ $.Name }}) Get{{ $r.Name }}(ctx context.Context, name{{ if $r.Namesp
 	if name == "" {
 		return nil, fmt.Errorf("create: no name for given object")
 	}
-	url := c.client.urlFor("{{ $.APIGroup }}", "{{ $.APIVersion }}", {{ if $r.Namespaced }}namespace{{ else }}AllNamespaces{{ end }}, "{{ $r.Pluralized }}", name)
+	{{ if $r.Namespaced -}}
+	ns := c.client.namespaceFor(namespace)
+	{{ else -}}
+	ns := ""
+	{{ end }}
+	url := c.client.urlFor("{{ $.APIGroup }}", "{{ $.APIVersion }}", ns, "{{ $r.Pluralized }}", name, "")
 	resp := new({{ $.ImportName }}.{{ $r.Name }})
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
@@ -200,8 +214,13 @@ func (w *{{ $.Name }}{{ $r.Name }}Watcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (c *{{ $.Name }}) Watch{{ $r.Name | pluralize }}(ctx context.Context{{ if $r.Namespaced }}, namespace string{{ end }}, options ...Option) (*{{ $.Name }}{{ $r.Name }}Watcher, error) {
-	url := c.client.urlFor("{{ $.APIGroup }}", "{{ $.APIVersion }}", {{ if $r.Namespaced }}namespace{{ else }}AllNamespaces{{ end }}, "{{ $r.Pluralized }}", "", options...)
+func (c *{{ $.Name }}) Watch{{ $r.Name | pluralize }}(ctx context.Context{{ if $r.Namespaced }}, namespace string{{ end }}, options ...Option) (*{{ $.Name }}{{ $r.Name }}Watcher, error){
+	{{ if $r.Namespaced -}}
+	ns := c.client.namespaceFor(namespace)
+	{{ else -}}
+	ns := ""
+	{{- end }}
+	url := c.client.urlFor("{{ $.APIGroup }}", "{{ $.APIVersion }}", ns, "{{ $r.Pluralized }}", "", "", options...)
 	watcher, err := c.client.watch(ctx, url)
 	if err != nil {
 		return nil, err
@@ -210,7 +229,12 @@ func (c *{{ $.Name }}) Watch{{ $r.Name | pluralize }}(ctx context.Context{{ if $
 }
 
 func (c *{{ $.Name }}) List{{ $r.Name | pluralize }}(ctx context.Context{{ if $r.Namespaced }}, namespace string{{ end }}, options ...Option) (*{{ $.ImportName }}.{{ $r.Name }}List, error) {
-	url := c.client.urlFor("{{ $.APIGroup }}", "{{ $.APIVersion }}", {{ if $r.Namespaced }}namespace{{ else }}AllNamespaces{{ end }}, "{{ $r.Pluralized }}", "", options...)
+	{{ if $r.Namespaced -}}
+	ns := c.client.namespaceFor(namespace)
+	{{ else -}}
+	ns := ""
+	{{- end }}
+	url := c.client.urlFor("{{ $.APIGroup }}", "{{ $.APIVersion }}", ns, "{{ $r.Pluralized }}", "", "", options...)
 	resp := new({{ $.ImportName }}.{{ $r.Name }}List)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
